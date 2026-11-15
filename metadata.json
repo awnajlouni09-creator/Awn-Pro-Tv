@@ -1,0 +1,8 @@
+{
+  "name": "Awn Tv pro",
+  "description": "منصة Awn Tv pro للبث المباشر والأفلام والمسلسلات والقنوات الترفيهية والرياضية بجودة عالية. Awn Tv pro is your premier live TV, movies, series, and entertainment streaming platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

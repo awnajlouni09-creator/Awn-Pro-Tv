@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#141414" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Awn Tv pro" />
+
+    <!-- Search Engine Indexing & Crawling -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="google-site-verification" content="pog8ALA8Eq7YsQ7Cb59LQTkohEbckDeFbeCIH2v0obU" />
+    <link rel="canonical" id="canonical-link" />
+
+    <!-- Primary Title & Bilingual Meta Description -->
+    <title>Awn Tv pro - منصة البث المباشر والأفلام والمسلسلات</title>
+    <meta
+      name="description"
+      content="منصة Awn Tv pro للبث المباشر والأفلام والمسلسلات والقنوات الترفيهية والرياضية بجودة عالية. Awn Tv pro is your premier live TV, movies, series, and entertainment streaming platform."
+    />
+    <meta name="application-name" content="Awn Tv pro" />
+    <meta name="author" content="Awn Tv pro" />
+    <meta
+      name="keywords"
+      content="Awn Tv pro, عون تي في برو, Awn TV, بث مباشر, أفلام, مسلسلات, قنوات عربية, أنمي, رياضة, تلفزيون ذكي, live streaming platform"
+    />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph / Social Share Cards -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Awn Tv pro" />
+    <meta property="og:locale" content="ar_AR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" id="og-url-meta" content="/" />
+    <meta property="og:title" content="Awn Tv pro - منصة البث المباشر والأفلام والمسلسلات" />
+    <meta
+      property="og:description"
+      content="منصة Awn Tv pro للبث المباشر والأفلام والمسلسلات والقنوات الترفيهية والرياضية بجودة عالية. Awn Tv pro is your premier live TV, movies, series, and entertainment streaming platform."
+    />
+    <meta property="og:image" id="og-image-meta" content="/pwa-512x512.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="شعار منصة Awn Tv pro للبث المباشر والترفيه" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Awn Tv pro - منصة البث المباشر والأفلام والمسلسلات" />
+    <meta
+      name="twitter:description"
+      content="منصة Awn Tv pro للبث المباشر والأفلام والمسلسلات والقنوات الترفيهية والرياضية بجودة عالية. Awn Tv pro is your premier live TV, movies, series, and entertainment streaming platform."
+    />
+    <meta name="twitter:image" id="twitter-image-meta" content="/pwa-512x512.png" />
+    <meta name="twitter:image:alt" content="Awn Tv pro Logo" />
+
+    <!-- Dynamic Canonical & OpenGraph URL Resolution -->
+    <script>
+      (function () {
+        try {
+          var currentUrl = window.location.origin + window.location.pathname;
+          var canonical = document.getElementById('canonical-link');
+          var ogUrl = document.getElementById('og-url-meta');
+          var ogImg = document.getElementById('og-image-meta');
+          var twImg = document.getElementById('twitter-image-meta');
+          if (canonical) canonical.setAttribute('href', currentUrl);
+          if (ogUrl) ogUrl.setAttribute('content', currentUrl);
+          if (ogImg) ogImg.setAttribute('content', window.location.origin + '/pwa-512x512.png');
+          if (twImg) twImg.setAttribute('content', window.location.origin + '/pwa-512x512.png');
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Schema.org Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Awn Tv pro",
+        "alternateName": ["Awn TV Pro", "عون تي في برو"],
+        "applicationCategory": "EntertainmentApplication",
+        "operatingSystem": "All",
+        "inLanguage": ["ar", "en"],
+        "description": "منصة Awn Tv pro للبث المباشر والأفلام والمسلسلات والقنوات الترفيهية والرياضية بجودة عالية. Awn Tv pro is your premier live TV, movies, series, and entertainment streaming platform.",
+        "image": "/pwa-512x512.png",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#141414] text-white selection:bg-[#cc0000] selection:text-white antialiased overflow-x-hidden font-sans">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+customtkinter>=5.2.0
+python-vlc>=3.0.18105
+requests>=2.31.0
+pyinstaller>=6.0.0

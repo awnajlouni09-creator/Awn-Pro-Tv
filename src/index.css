@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  * {
+    border-color: #262626;
+  }
+  
+  body {
+    font-family: 'Cairo', 'Outfit', system-ui, -apple-system, sans-serif;
+    background-color: #141414;
+    color: #ffffff;
+    user-select: none;
+  }
+
+  /* Custom sleek scrollbar for Smart TV look */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #141414;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #cc0000;
+  }
+}
+
+/* TV scanline & cinematic glow effects */
+.tv-glow {
+  box-shadow: 0 0 35px -5px rgba(204, 0, 0, 0.35);
+}
+
+.channel-card-focus {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.channel-card-focus:focus-visible,
+.channel-card-focus.active-focused {
+  outline: 2px solid #ff1a1a;
+  outline-offset: 2px;
+  background-color: #1f1f1f;
+  transform: translateX(-4px);
+}
+
+@keyframes ticker-scroll-rtl {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-ticker-rtl {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: ticker-scroll-rtl 26s linear infinite;
+}
+
+.animate-ticker-rtl:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker-rtl {
+    animation: none;
+  }
+}
+
+/* Netflix-style Cinematic Intro Animations */
+@keyframes netflix-a-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.78);
+    filter: brightness(0.4) drop-shadow(0 0 0 rgba(229, 9, 20, 0));
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1.1) drop-shadow(0 0 40px rgba(229, 9, 20, 0.75));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.04);
+    filter: brightness(1.25) drop-shadow(0 0 55px rgba(229, 9, 20, 0.9));
+  }
+}
+
+@keyframes netflix-zoom-exit {
+  0% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(6.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(16);
+  }
+}
+
+@keyframes netflix-ribbon-burst {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.15) scaleX(0.6);
+  }
+  30% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(2.2) scaleX(1.85);
+  }
+}
+
+.animate-netflix-a-reveal {
+  animation: netflix-a-reveal 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-netflix-zoom-exit {
+  animation: netflix-zoom-exit 0.8s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.animate-netflix-ribbon {
+  animation: netflix-ribbon-burst 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Top 10 hollowed numeral stroke */
+.top10-numeral {
+  font-family: 'Outfit', 'Cairo', system-ui, sans-serif;
+  color: #141414;
+  -webkit-text-stroke: 3.5px #595959;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.9);
+  transition: -webkit-text-stroke-color 0.3s ease, transform 0.3s ease;
+}
+
+.group\/top10:hover .top10-numeral {
+  -webkit-text-stroke-color: #e50914;
+}
+
+@media (max-width: 640px) {
+  .top10-numeral {
+    -webkit-text-stroke: 2.5px #595959;
+  }
+}
+
