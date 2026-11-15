@@ -71,10 +71,11 @@
           var ogUrl = document.getElementById('og-url-meta');
           var ogImg = document.getElementById('og-image-meta');
           var twImg = document.getElementById('twitter-image-meta');
+          var baseUrl = currentUrl.replace(/[^/]*$/, '');
           if (canonical) canonical.setAttribute('href', currentUrl);
           if (ogUrl) ogUrl.setAttribute('content', currentUrl);
-          if (ogImg) ogImg.setAttribute('content', window.location.origin + '/pwa-512x512.png');
-          if (twImg) twImg.setAttribute('content', window.location.origin + '/pwa-512x512.png');
+          if (ogImg) ogImg.setAttribute('content', baseUrl + 'pwa-512x512.png');
+          if (twImg) twImg.setAttribute('content', baseUrl + 'pwa-512x512.png');
         } catch (e) {}
       })();
     </script>

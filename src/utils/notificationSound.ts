@@ -103,8 +103,8 @@ export function triggerBrowserNotification(title: string, body: string): void {
     try {
       new Notification(title, {
         body,
-        icon: '/pwa-192x192.png',
-        badge: '/pwa-192x192.png'
+        icon: './pwa-192x192.png',
+        badge: './pwa-192x192.png'
       });
     } catch {
       // Fallback gracefully if browser blocks constructor in iframe
