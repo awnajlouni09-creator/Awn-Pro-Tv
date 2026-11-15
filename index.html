@@ -29,9 +29,9 @@
     />
 
     <!-- Icons -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
 
     <!-- Open Graph / Social Share Cards -->
     <meta property="og:type" content="website" />
@@ -60,10 +60,12 @@
     <meta name="twitter:image" id="twitter-image-meta" content="/pwa-512x512.png" />
     <meta name="twitter:image:alt" content="Awn Tv pro Logo" />
 
-    <!-- Dynamic Canonical & OpenGraph URL Resolution -->
+    <!-- Safe Runtime Env Shim & Dynamic Canonical Resolution -->
     <script>
       (function () {
         try {
+          window.process = window.process || { env: {} };
+          window.process.env = window.process.env || {};
           var currentUrl = window.location.origin + window.location.pathname;
           var canonical = document.getElementById('canonical-link');
           var ogUrl = document.getElementById('og-url-meta');
