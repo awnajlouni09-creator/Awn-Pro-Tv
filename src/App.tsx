@@ -54,6 +54,11 @@ import { GamesZone } from './components/GamesZone';
 import { NotificationToast } from './components/NotificationToast';
 import { BreakingNewsTicker } from './components/BreakingNewsTicker';
 import { OfflineIndicator } from './components/PWAInstallButton';
+import {
+  UpdatesModal,
+  InstalledAppVersionInfo,
+  UpdatePackagePayload
+} from './components/UpdatesModal';
 import { 
   Newspaper, 
   Clapperboard, 
@@ -83,7 +88,13 @@ const MATCH_REMINDERS_STORAGE_KEY = 'awn_tv_match_reminders_v1';
 const TICKER_STORAGE_KEY = 'awn_tv_ticker_v1';
 const SUBSCRIPTION_CONFIG_STORAGE_KEY = 'awn_tv_sub_config_v1';
 const ACTIVE_SUBSCRIPTION_STORAGE_KEY = 'awn_tv_sub_status_v1';
+const APP_VERSION_STORAGE_KEY = 'awn_tv_installed_version_v1';
 const getContinueWatchingKey = (profileId: string) => `awn_tv_continue_watching_v1_${profileId}`;
+
+const DEFAULT_INSTALLED_VERSION: InstalledAppVersionInfo = {
+  version: '1.0.0',
+  versionName: 'الإصدار الأساسي المستقر'
+};
 
 const DEFAULT_TICKER: BreakingTickerConfig = {
   enabled: false,
@@ -296,6 +307,19 @@ export default function App() {
   const [isPythonModalOpen, setIsPythonModalOpen] = useState(false);
   const [isAdminPinOpen, setIsAdminPinOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [isUpdatesModalOpen, setIsUpdatesModalOpen] = useState(false);
+  const [installedVersion, setInstalledVersion] = useState<InstalledAppVersionInfo>(() => {
+    try {
+      const saved = localStorage.getItem(APP_VERSION_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as InstalledAppVersionInfo;
+        if (parsed && typeof parsed.version === 'string' && typeof parsed.versionName === 'string') {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_INSTALLED_VERSION;
+  });
 
   // Subscription Gate & PayPal ($2/month) / Gift Code (911) State
   const [subscriptionConfig, setSubscriptionConfig] = useState<SubscriptionConfig>(() => {
@@ -875,6 +899,89 @@ export default function App() {
     if (payload.adminPin) {
       setAdminPin(payload.adminPin);
     }
+  };
+
+  const handleApplyUpdatePackage = (payload: UpdatePackagePayload) => {
+    let nextChannelsCount = allChannels.length;
+    let nextMoviesAndSeriesCount = allChannels.filter(
+      (c) => c.group === 'أفلام أجنبية' || c.group === 'مسلسلات عربية' || c.group === 'ملخصات انمي'
+    ).length;
+    let nextMatchesCount = matches.length;
+
+    if (payload.channels && payload.channels.length > 0) {
+      const localSaved = allChannels.filter((c) => c.isLocalSaved);
+      const importedIds = new Set(payload.channels.map((c) => c.id));
+      const mergedChannels = [
+        ...payload.channels,
+        ...localSaved.filter((lc) => !importedIds.has(lc.id))
+      ];
+      setAllChannels(mergedChannels);
+      nextChannelsCount = mergedChannels.length;
+      nextMoviesAndSeriesCount = mergedChannels.filter(
+        (c) =>
+          c.group === 'أفلام أجنبية' ||
+          c.group === 'مسلسلات عربية' ||
+          c.group === 'ملخصات انمي' ||
+          c.group.includes('أفلام') ||
+          c.group.includes('مسلسلات')
+      ).length;
+
+      const baseCats = payload.categories && payload.categories.length > 0 ? payload.categories : categories;
+      const missingGroups = Array.from(
+        new Set(mergedChannels.map((c) => c.group).filter((g) => g && !baseCats.includes(g)))
+      );
+      if (payload.categories || missingGroups.length > 0) {
+        setCategories([...baseCats, ...missingGroups]);
+      }
+    } else if (payload.categories && payload.categories.length > 0) {
+      setCategories(payload.categories);
+    }
+
+    if (payload.customCovers) {
+      setCustomCovers((prev) => {
+        const next = { ...prev, ...payload.customCovers };
+        try {
+          localStorage.setItem(CUSTOM_COVERS_KEY, JSON.stringify(next));
+        } catch (e) {}
+        return next;
+      });
+    }
+
+    if (payload.heroChannelIds && payload.heroChannelIds.length > 0) {
+      setHeroChannelIds(payload.heroChannelIds);
+    }
+
+    if (payload.matches) {
+      setMatches(payload.matches);
+      nextMatchesCount = payload.matches.length;
+    }
+
+    if (payload.tickerConfig) {
+      setTickerConfig(payload.tickerConfig);
+    }
+
+    const updatedVer: InstalledAppVersionInfo = {
+      version: payload.version,
+      versionName: payload.versionName,
+      updatedAt: new Date().toISOString(),
+      notes: payload.notes
+    };
+    setInstalledVersion(updatedVer);
+    try {
+      localStorage.setItem(APP_VERSION_STORAGE_KEY, JSON.stringify(updatedVer));
+    } catch (e) {}
+
+    dispatchNotification(
+      `تم تثبيت ${updatedVer.versionName} (v${updatedVer.version.replace(/^v/i, '')})`,
+      `تم تحديث ${nextChannelsCount} قناة وعمل فني و${nextMatchesCount} مباراة بنجاح.`,
+      'general'
+    );
+
+    return {
+      channelsCount: nextChannelsCount,
+      moviesAndSeriesCount: nextMoviesAndSeriesCount,
+      matchesCount: nextMatchesCount
+    };
   };
 
   const handleResetDefaults = () => {
@@ -1469,6 +1576,7 @@ export default function App() {
         }}
         subscriptionStatusText={subscriptionStatusText}
         onLockSubscriptionGate={handleLockSubscriptionGate}
+        onOpenUpdatesModal={() => setIsUpdatesModalOpen(true)}
       />
 
       {/* Main Content Area (With extra bottom padding when Spotify Mini Player or Ticker is active) */}
@@ -2100,6 +2208,14 @@ export default function App() {
       <PythonWindowsExportModal
         isOpen={isPythonModalOpen}
         onClose={() => setIsPythonModalOpen(false)}
+      />
+
+      {/* 11. App Updates Modal (Install New Version via .json) */}
+      <UpdatesModal
+        isOpen={isUpdatesModalOpen}
+        onClose={() => setIsUpdatesModalOpen(false)}
+        currentVersion={installedVersion}
+        onApplyUpdate={handleApplyUpdatePackage}
       />
     </div>
   );

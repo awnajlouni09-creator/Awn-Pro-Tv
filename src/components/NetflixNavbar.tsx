@@ -19,7 +19,8 @@ import {
   Trash2,
   Flame,
   Megaphone,
-  CreditCard
+  CreditCard,
+  Download
 } from 'lucide-react';
 import { UserProfile } from '../types/profile';
 import { MatchThemeId } from '../types/matches';
@@ -62,6 +63,7 @@ interface NetflixNavbarProps {
   onClickNotification: (notification: AppNotification) => void;
   subscriptionStatusText?: string;
   onLockSubscriptionGate?: () => void;
+  onOpenUpdatesModal?: () => void;
 }
 
 export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
@@ -85,7 +87,8 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
   onClearNotifications,
   onClickNotification,
   subscriptionStatusText,
-  onLockSubscriptionGate
+  onLockSubscriptionGate,
+  onOpenUpdatesModal
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -388,7 +391,25 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
           )}
         </div>
 
-        {/* 3. Admin Panel Icon */}
+        {/* 3. Updates Button (التحديثات) */}
+        {onOpenUpdatesModal && (
+          <button
+            type="button"
+            onClick={() => {
+              setIsNotificationsOpen(false);
+              setIsProfileMenuOpen(false);
+              onOpenUpdatesModal();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/90 hover:text-white text-[11px] sm:text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap"
+            title="التحديثات"
+            aria-label="التحديثات"
+          >
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E50914]" />
+            <span>التحديثات</span>
+          </button>
+        )}
+
+        {/* 4. Admin Panel Icon */}
         <button
           onClick={onOpenAdminPanel}
           className="p-1.5 text-white/90 hover:text-[#E50914] transition-transform hover:scale-110 cursor-pointer shrink-0"
