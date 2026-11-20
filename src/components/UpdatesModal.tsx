@@ -7,7 +7,8 @@ import {
   RefreshCw,
   Film,
   Tv,
-  Trophy
+  Trophy,
+  ExternalLink
 } from 'lucide-react';
 import { Channel } from '../types/iptv';
 import { MatchItem } from '../types/matches';
@@ -301,6 +302,36 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
               >
                 <path d="M16.002 3C8.832 3 3 8.832 3 16c0 2.29.598 4.525 1.734 6.494L3.06 28.94l6.607-1.644A12.94 12.94 0 0 0 16.002 29C23.17 29 29 23.168 29 16S23.17 3 16.002 3Zm0 23.62c-1.997 0-3.954-.536-5.658-1.548l-.406-.241-3.922.976 1.047-3.823-.265-.422A10.57 10.57 0 0 1 5.38 16c0-5.857 4.765-10.62 10.622-10.62 5.856 0 10.62 4.763 10.62 10.62 0 5.856-4.764 10.62-10.62 10.62Zm5.826-7.953c-.32-.16-1.89-.933-2.183-1.04-.293-.106-.506-.16-.72.16-.213.32-.826 1.04-1.013 1.253-.186.213-.373.24-.693.08-.32-.16-1.35-.498-2.572-1.588-.951-.848-1.593-1.896-1.78-2.216-.186-.32-.02-.493.14-.652.144-.143.32-.373.48-.56.16-.186.213-.32.32-.533.106-.213.053-.4-.027-.56-.08-.16-.72-1.734-.986-2.374-.26-.624-.524-.54-.72-.55l-.613-.011c-.213 0-.56.08-.853.4-.293.32-1.12 1.094-1.12 2.668s1.146 3.094 1.306 3.307c.16.213 2.256 3.445 5.465 4.83.763.33 1.359.527 1.823.674.766.244 1.464.21 2.015.127.615-.092 1.89-.773 2.156-1.52.266-.746.266-1.386.186-1.52-.08-.133-.293-.213-.613-.373Z" />
               </svg>
+            </a>
+          </div>
+
+          {/* Latest Update Direct Download Option */}
+          <div className="p-4 bg-[#141414] border border-[#E50914]/35 rounded-lg flex items-center justify-between gap-4">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm sm:text-base font-bold text-white">آخر تحديث</span>
+                <span className="font-mono text-[11px] font-semibold text-[#E50914] bg-[#E50914]/15 px-2 py-0.5 rounded">
+                  2026-11-20
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 leading-relaxed truncate" dir="ltr">
+                awn-tv-pro-backup-2026-11-20.json
+              </p>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                حمّل ملف آخر تحديث ثم اختره من الزر بالأسفل لتثبيته.
+              </p>
+            </div>
+
+            <a
+              href="https://www.mediafire.com/file/7l9fboktqc2tqb3/awn-tv-pro-backup-2026-11-20.json/file"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="تحميل آخر تحديث"
+              className="px-4 py-2.5 rounded-lg bg-[#E50914]/15 hover:bg-[#E50914] text-[#ff4d56] hover:text-white border border-[#E50914]/40 font-bold text-xs sm:text-sm flex items-center gap-2 shrink-0 transition-all cursor-pointer active:scale-95"
+            >
+              <Download className="w-4 h-4" />
+              <span>تحميل آخر تحديث</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
             </a>
           </div>
 

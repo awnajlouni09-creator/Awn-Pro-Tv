@@ -20,7 +20,7 @@ export default defineConfig(() => {
           id: './',
           name: 'Awn Tv pro',
           short_name: 'Awn Tv pro',
-          description: 'رسيفر ذكي ومشغل وسائط وبث مباشر متكامل مع مركز المباريات والألعاب المصغرة.',
+          description: 'افلام ومسلسلات حصريه',
           theme_color: '#0a0a0a',
           background_color: '#0a0a0a',
           display: 'standalone',
