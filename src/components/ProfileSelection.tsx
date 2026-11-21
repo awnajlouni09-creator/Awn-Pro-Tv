@@ -21,8 +21,6 @@ import {
 } from '../data/defaultProfiles';
 import { PinPromptModal } from './PinPromptModal';
 import { ProfileManagementModal } from './ProfileManagementModal';
-import { ParticleNebulaBg, AppThemeId } from './ParticleNebulaBg';
-import { playCyberClick } from '../utils/sciFiAudio';
 
 interface ProfileSelectionProps {
   profiles: UserProfile[];
@@ -35,7 +33,6 @@ interface ProfileSelectionProps {
   onRemoveHistoryItem?: (profileId: string, channelId: string) => void;
   onClearHistory?: (profileId: string) => void;
   customCovers?: Record<string, string>;
-  theme?: AppThemeId;
 }
 
 export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
@@ -48,8 +45,7 @@ export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
   getProfileHistory,
   onRemoveHistoryItem,
   onClearHistory,
-  customCovers = {},
-  theme = 'action'
+  customCovers = {}
 }) => {
   const [isManaging, setIsManaging] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -193,32 +189,16 @@ export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
     setHistoryRefreshTick((t) => t + 1);
   };
 
-  const isClassic = theme === 'netflix';
-
   return (
-    <div
-      data-theme={theme}
-      className={`fixed inset-0 z-40 flex flex-col items-center justify-center p-6 select-none overflow-y-auto ${
-        theme === 'galaxy'
-          ? 'bg-[#04020f]'
-          : theme === '2077'
-          ? 'bg-[#050914]'
-          : isClassic
-          ? 'bg-[#141414]'
-          : 'bg-[#07070c]'
-      }`}
-    >
-      <ParticleNebulaBg theme={theme} />
+    <div className="fixed inset-0 z-40 bg-[#141414] flex flex-col items-center justify-center p-6 select-none overflow-y-auto">
+      {/* Subtle top atmospheric vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(229,9,20,0.10)_0%,transparent_55%)] pointer-events-none" />
 
       {/* Brand Header */}
       <div className="absolute top-5 right-5 sm:top-8 sm:right-10 left-5 sm:left-10 flex items-center justify-between gap-2 z-10">
         <span
           className="text-xl sm:text-2xl md:text-[26px] font-black tracking-tight font-['Outfit'] text-[#E50914]"
-          style={
-            isClassic
-              ? undefined
-              : { textShadow: '0 0 22px rgba(229,9,20,0.5), 0 2px 14px rgba(0,0,0,0.75)' }
-          }
+          style={{ textShadow: '0 2px 14px rgba(0,0,0,0.65)' }}
         >
           Awn Tv pro
         </span>
@@ -226,15 +206,8 @@ export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
         {onLockSubscriptionGate && (
           <button
             type="button"
-            onClick={() => {
-              if (!isClassic) playCyberClick();
-              onLockSubscriptionGate();
-            }}
-            className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-zinc-200 hover:text-white transition-all cursor-pointer ${
-              isClassic
-                ? 'rounded bg-black/50 border border-white/25 hover:border-white'
-                : 'rounded-xl modern-glass border border-white/15 hover:border-[#E50914]/65'
-            }`}
+            onClick={onLockSubscriptionGate}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/25 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5 text-[#E50914]" />
             <span>بوابة الاشتراك</span>
@@ -244,11 +217,7 @@ export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
 
       {/* Main Content Box */}
       <div className="relative z-10 flex flex-col items-center max-w-5xl w-full text-center py-8 sm:py-12 animate-in fade-in zoom-in-95 duration-300">
-        <h1
-          className={`text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-9 sm:mb-12 ${
-            isClassic ? '' : 'drop-shadow-[0_4px_24px_rgba(229,9,20,0.28)]'
-          }`}
-        >
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-9 sm:mb-12">
           {isManaging ? 'إدارة الملفات الشخصية:' : 'من يشاهد الآن؟'}
         </h1>
 
@@ -262,25 +231,11 @@ export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
               <button
                 key={profile.id}
                 type="button"
-                data-interactive-target="true"
-                onClick={() => {
-                  if (!isClassic) playCyberClick();
-                  handleProfileCardClick(profile);
-                }}
+                onClick={() => handleProfileCardClick(profile)}
                 className="group flex flex-col items-center cursor-pointer focus:outline-none active:scale-95 transition-transform duration-200"
               >
                 {/* Avatar Box */}
-                <div
-                  className={`relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden transition-all duration-200 ease-out ${
-                    isClassic
-                      ? 'rounded-md bg-[#181818] border-[3px] border-transparent group-hover:border-white group-focus-visible:border-white group-hover:scale-105 shadow-md'
-                      : theme === 'galaxy'
-                      ? 'rounded-2xl modern-glass glass-border-glow border-[2px] border-purple-400/25 group-hover:border-purple-400 group-focus-visible:border-purple-400 group-hover:scale-[1.08] group-hover:-translate-y-1.5 shadow-xl group-hover:shadow-[0_14px_40px_rgba(168,85,247,0.4)]'
-                      : theme === '2077'
-                      ? 'rounded-2xl modern-glass glass-border-glow border-[2px] border-cyan-400/25 group-hover:border-cyan-400 group-focus-visible:border-cyan-400 group-hover:scale-[1.08] group-hover:-translate-y-1.5 shadow-xl group-hover:shadow-[0_14px_40px_rgba(0,242,254,0.35)]'
-                      : 'rounded-2xl modern-glass glass-border-glow border-[2px] border-white/15 group-hover:border-[#E50914] group-focus-visible:border-[#E50914] group-hover:scale-[1.08] group-hover:-translate-y-1.5 group-focus-visible:scale-[1.08] shadow-xl group-hover:shadow-[0_14px_40px_rgba(229,9,20,0.4)]'
-                  }`}
-                >
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl overflow-hidden border-[3px] border-transparent group-hover:border-white group-focus-visible:border-white group-hover:scale-[1.08] group-focus-visible:scale-[1.08] transition-all duration-200 ease-out bg-zinc-900 shadow-lg group-hover:shadow-[0_0_28px_rgba(255,255,255,0.28)]">
                   <img
                     src={profile.avatar}
                     alt={profile.name}
@@ -337,13 +292,7 @@ export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
               onClick={openAddModal}
               className="group flex flex-col items-center cursor-pointer focus:outline-none active:scale-95 transition-transform duration-200"
             >
-              <div
-                className={`w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center text-zinc-400 group-hover:text-white transition-all duration-200 ease-out ${
-                  isClassic
-                    ? 'rounded-md border-2 border-zinc-700 group-hover:border-white bg-transparent group-hover:bg-white/10 group-hover:scale-105'
-                    : 'rounded-xl border-[3px] border-dashed border-zinc-700 group-hover:border-white group-focus-visible:border-white group-hover:scale-[1.08] group-focus-visible:scale-[1.08] bg-zinc-900/50 group-hover:bg-zinc-800/80 group-hover:shadow-[0_0_28px_rgba(255,255,255,0.22)]'
-                }`}
-              >
+              <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl border-[3px] border-dashed border-zinc-700 group-hover:border-white group-focus-visible:border-white flex items-center justify-center text-zinc-400 group-hover:text-white transition-all duration-200 ease-out group-hover:scale-[1.08] group-focus-visible:scale-[1.08] bg-zinc-900/50 group-hover:bg-zinc-800/80 group-hover:shadow-[0_0_28px_rgba(255,255,255,0.22)]">
                 <Plus className="w-10 h-10 md:w-12 md:h-12 transition-transform duration-200 group-hover:scale-110" />
               </div>
               <span className="mt-3.5 text-sm sm:text-base md:text-lg font-medium text-zinc-400 group-hover:text-white group-hover:font-bold transition-all duration-200">

@@ -8,15 +8,11 @@ import {
   Film,
   Tv,
   Trophy,
-  ExternalLink,
-  FileArchive
+  ExternalLink
 } from 'lucide-react';
 import { Channel } from '../types/iptv';
 import { MatchItem } from '../types/matches';
 import { BreakingTickerConfig } from '../types/notifications';
-
-// ضع رابط GitHub Release أو MediaFire المباشر الخاص بالملف المضغوط (.ZIP) هنا
-export const FULL_ZIP_RELEASE_URL = '';
 
 export interface InstalledAppVersionInfo {
   version: string;
@@ -357,35 +353,6 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
               <Download className="w-5 h-5" />
               <span>تحميل وتثبيت إصدار جديد</span>
             </button>
-
-            {/^https?:\/\//i.test(FULL_ZIP_RELEASE_URL.trim()) ? (
-              <a
-                href={FULL_ZIP_RELEASE_URL.trim()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 px-6 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-sm sm:text-base rounded-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-[0.99]"
-              >
-                <FileArchive className="w-5 h-5 text-amber-400 shrink-0" />
-                <span>تحميل النسخة الكاملة المضغوطة (.ZIP)</span>
-                <ExternalLink className="w-4 h-4 opacity-80 shrink-0" />
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setInstalledSummary(null);
-                  setErrorMessage(
-                    'يرجى إضافة رابط التحميل المباشر (GitHub Release أو MediaFire) داخل المتغير FULL_ZIP_RELEASE_URL لتفعيل التحميل المباشر.'
-                  );
-                }}
-                className="w-full py-3 px-6 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-sm sm:text-base rounded-lg flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-[0.99]"
-              >
-                <FileArchive className="w-5 h-5 text-amber-400 shrink-0" />
-                <span>تحميل النسخة الكاملة المضغوطة (.ZIP)</span>
-                <ExternalLink className="w-4 h-4 opacity-80 shrink-0" />
-              </button>
-            )}
-
             <p className="text-xs text-zinc-400 leading-relaxed text-center">
               اختر ملف التحديث (<span className="font-mono text-zinc-300">.json</span>) من جهازك لتحديث جميع الأفلام، المسلسلات، القنوات، والمباريات فوراً.
             </p>

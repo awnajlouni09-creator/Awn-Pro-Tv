@@ -238,14 +238,14 @@ export const ProfileManagementModal: React.FC<ProfileManagementModalProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-[#07070c]/85 backdrop-blur-md flex items-start justify-center p-0 sm:p-4 md:p-8 overflow-y-auto select-none"
+      className="fixed inset-0 z-50 bg-[#141414]/95 backdrop-blur-md flex items-start justify-center p-0 sm:p-4 md:p-8 overflow-y-auto select-none"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-4xl modern-glass glass-border-glow sm:rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.95),0_0_40px_rgba(229,9,20,0.16)] overflow-hidden text-white my-auto min-h-screen sm:min-h-0 flex flex-col animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-4xl bg-[#181818] sm:border border-white/10 sm:rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.95)] overflow-hidden text-white my-auto min-h-screen sm:min-h-0 flex flex-col animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Top Bar */}
-        <div className="px-5 sm:px-8 py-5 bg-black/50 border-b border-white/10 flex items-center justify-between gap-4">
+        <div className="px-5 sm:px-8 py-5 bg-[#141414] border-b border-white/10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"

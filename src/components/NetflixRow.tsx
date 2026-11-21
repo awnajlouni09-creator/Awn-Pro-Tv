@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef } from 'react';
 import {
   Play,
   Pause,
@@ -14,8 +14,6 @@ import {
 import { Channel } from '../types/iptv';
 import { ChannelThumbnail } from './ChannelThumbnail';
 import { isMovieOrSeriesChannel } from '../utils/mediaMetadata';
-import { playCyberClick } from '../utils/sciFiAudio';
-import { AppThemeId } from './ParticleNebulaBg';
 
 interface NetflixRowProps {
   title: string;
@@ -32,17 +30,7 @@ interface NetflixRowProps {
   activeChannelId?: string | null;
   focusedChannelId?: string | null;
   isPlayerPlaying?: boolean;
-  theme?: AppThemeId;
 }
-
-const getCardRating = (id: string): string => {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  const tenths = Math.abs(hash) % 15;
-  return (8.5 + tenths * 0.1).toFixed(1);
-};
 
 export const NetflixRow: React.FC<NetflixRowProps> = ({
   title,
@@ -58,51 +46,9 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
   layout = 'row',
   activeChannelId = null,
   focusedChannelId = null,
-  isPlayerPlaying = false,
-  theme = 'action'
+  isPlayerPlaying = false
 }) => {
   const rowRef = useRef<HTMLDivElement>(null);
-  const isClassic = theme === 'netflix';
-
-  const handleCardMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (isClassic) return;
-      const el = e.currentTarget;
-      const rect = el.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      const rotateY = (x - 0.5) * 14;
-      const rotateX = (0.5 - y) * 12;
-
-      el.style.transform = `perspective(950px) translateY(-8px) translateZ(16px) rotateX(${rotateX.toFixed(
-        2
-      )}deg) rotateY(${rotateY.toFixed(2)}deg) scale(1.06)`;
-      const sheen = el.querySelector<HTMLElement>('[data-holo-sheen]');
-      if (sheen) {
-        sheen.style.opacity = '1';
-        const sheenTint =
-          theme === 'galaxy'
-            ? 'rgba(192, 132, 252, 0.22)'
-            : theme === '2077'
-            ? 'rgba(6, 182, 212, 0.22)'
-            : 'rgba(229, 9, 20, 0.14)';
-        sheen.style.background = `radial-gradient(circle at ${Math.round(x * 100)}% ${Math.round(
-          y * 100
-        )}%, rgba(255, 255, 255, 0.22) 0%, ${sheenTint} 38%, transparent 74%)`;
-      }
-    },
-    [isClassic, theme]
-  );
-
-  const handleCardMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    el.style.transform = '';
-    const sheen = el.querySelector<HTMLElement>('[data-holo-sheen]');
-    if (sheen) {
-      sheen.style.opacity = '0';
-    }
-  }, []);
 
   if (!channels || channels.length === 0) return null;
 
@@ -112,14 +58,6 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
       rowRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
-
-  const arrowBtnClass = isClassic
-    ? 'hidden md:flex absolute top-5 bottom-5 w-11 bg-black/70 hover:bg-black/90 text-white z-40 items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 cursor-pointer'
-    : theme === 'galaxy'
-    ? 'hidden md:flex absolute top-5 bottom-5 w-11 modern-glass border border-purple-400/30 hover:border-amber-400/65 text-white z-40 items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 cursor-pointer'
-    : theme === '2077'
-    ? 'hidden md:flex absolute top-5 bottom-5 w-11 modern-glass border border-cyan-400/35 hover:border-rose-400/65 text-white z-40 items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 cursor-pointer'
-    : 'hidden md:flex absolute top-5 bottom-5 w-11 modern-glass border border-white/20 hover:border-[#E50914]/65 text-white z-40 items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 cursor-pointer';
 
   const renderSpotifyCard = (channel: Channel, isGrid: boolean) => {
     const isFav = favorites.includes(channel.id);
@@ -131,70 +69,49 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
       <div
         key={channel.id}
         data-channel-id={channel.id}
-        data-channel-group={channel.group}
-        data-channel-name={channel.name}
-        onMouseMove={handleCardMouseMove}
-        onMouseLeave={handleCardMouseLeave}
-        onClick={() => {
-          playCyberClick();
-          onPlayChannel(channel);
-        }}
-        className={`group relative p-3 sm:p-3.5 transition-all duration-300 ease-out cursor-pointer will-change-transform ${
-          isClassic
-            ? 'rounded-md bg-[#181818] hover:bg-[#242424] border border-white/10'
-            : 'rounded-xl modern-glass glass-border-glow'
-        } ${isGrid ? 'w-full' : 'flex-none w-40 sm:w-44 md:w-48 snap-start'} ${
+        onClick={() => onPlayChannel(channel)}
+        className={`group relative rounded-xl p-3 sm:p-3.5 transition-all duration-300 cursor-pointer border ${
+          isGrid ? 'w-full' : 'flex-none w-40 sm:w-44 md:w-48 snap-start'
+        } ${
           isFocused
-            ? 'ring-2 ring-[#E50914] scale-[1.03] shadow-[0_0_32px_rgba(229,9,20,0.4)] z-20'
+            ? 'bg-[#2a1618] border-[#ff1a1a] ring-2 ring-[#ff1a1a] scale-[1.03] shadow-xl z-20'
             : isCurrentTrack
-            ? 'ring-1 ring-[#E50914] shadow-[0_14px_34px_rgba(229,9,20,0.3)]'
-            : 'hover:z-20'
+            ? 'bg-[#262626] border-[#e50914]/60 shadow-xl shadow-[#e50914]/10'
+            : 'bg-[#181818] hover:bg-[#282828] border-white/5 hover:border-white/15 shadow-lg'
         }`}
       >
-        {!isClassic && (
-          <div
-            data-holo-sheen
-            className="absolute inset-0 rounded-xl opacity-0 transition-opacity duration-200 pointer-events-none z-20"
-          />
-        )}
-
         {/* 1:1 Square Album Art */}
-        <div
-          className={`relative aspect-square w-full overflow-hidden shadow-md mb-3 ${
-            isClassic
-              ? 'rounded bg-zinc-900'
-              : 'rounded-lg bg-[#0a0a12] border border-white/15'
-          }`}
-        >
+        <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-zinc-900 shadow-md mb-3">
           <ChannelThumbnail
             channel={channel}
             customCover={customCover}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
+          {/* Subtle dark vignette at bottom for button contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
+          {/* Active Playing Badge */}
           {isCurrentTrack && (
-            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/80 border border-[#E50914]/60 flex items-center gap-1.5 z-10">
+            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/80 backdrop-blur-sm border border-[#e50914]/50 flex items-center gap-1.5 z-10">
               <span className="flex items-end gap-[2px] h-2.5">
-                <span className={`w-[2px] bg-[#E50914] rounded-full ${isPlayerPlaying ? 'h-2.5 animate-pulse' : 'h-1'}`} />
-                <span className={`w-[2px] bg-white rounded-full ${isPlayerPlaying ? 'h-1.5 animate-bounce' : 'h-1'}`} />
-                <span className={`w-[2px] bg-[#E50914] rounded-full ${isPlayerPlaying ? 'h-2 animate-pulse' : 'h-1'}`} />
+                <span className={`w-[2px] bg-[#e50914] rounded-full ${isPlayerPlaying ? 'h-2.5 animate-pulse' : 'h-1'}`} />
+                <span className={`w-[2px] bg-[#e50914] rounded-full ${isPlayerPlaying ? 'h-1.5 animate-bounce' : 'h-1'}`} />
+                <span className={`w-[2px] bg-[#e50914] rounded-full ${isPlayerPlaying ? 'h-2 animate-pulse' : 'h-1'}`} />
               </span>
               <span className="text-[9px] font-bold text-white">يعمل الآن</span>
             </div>
           )}
 
+          {/* Spotify Floating Red Play Button in Corner */}
           <button
             type="button"
-            data-play-btn="true"
             onClick={(e) => {
               e.stopPropagation();
-              playCyberClick();
               onPlayChannel(channel);
             }}
             aria-label={`تشغيل ${channel.name}`}
-            className={`absolute bottom-2.5 left-2.5 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#e50914] hover:bg-[#ff2633] hover:scale-110 text-white flex items-center justify-center shadow-[0_0_22px_rgba(229,9,20,0.65)] transition-all duration-300 z-10 cursor-pointer ${
+            className={`absolute bottom-2.5 left-2.5 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#e50914] hover:bg-[#ff1a1a] hover:scale-110 text-white flex items-center justify-center shadow-2xl shadow-black/80 transition-all duration-300 z-10 cursor-pointer ${
               isCurrentTrack
                 ? 'opacity-100 translate-y-0'
                 : 'opacity-100 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0'
@@ -208,10 +125,11 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
           </button>
         </div>
 
-        <div className="text-right relative z-10">
+        {/* Clean Title & Music Subtitle Below Album Art */}
+        <div className="text-right">
           <h3
             className={`text-xs sm:text-sm font-bold truncate leading-snug mb-1 transition-colors ${
-              isCurrentTrack ? 'text-[#ff4d58]' : 'text-white'
+              isCurrentTrack ? 'text-[#ff4d4d]' : 'text-white'
             }`}
           >
             {channel.name}
@@ -219,7 +137,7 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
 
           <div className="flex items-center justify-between gap-1 text-[11px] text-zinc-400">
             <div className="flex items-center gap-1.5 min-w-0">
-              <Music className="w-3 h-3 text-[#E50914] shrink-0" />
+              <Music className="w-3 h-3 text-[#e50914] shrink-0" />
               <span className="truncate">{channel.group}</span>
             </div>
 
@@ -227,11 +145,10 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  playCyberClick();
                   onToggleFavorite(channel.id);
                 }}
                 className={`p-1 rounded-md transition-colors cursor-pointer ${
-                  isFav ? 'text-[#E50914]' : 'text-zinc-500 hover:text-white'
+                  isFav ? 'text-amber-400' : 'text-zinc-500 hover:text-white'
                 }`}
                 title={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
               >
@@ -240,7 +157,6 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  playCyberClick();
                   onOpenDetails(channel);
                 }}
                 className="p-1 rounded-md text-zinc-500 hover:text-white cursor-pointer"
@@ -260,147 +176,97 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
     const customCover = customCovers[channel.id];
     const isFocused = focusedChannelId === channel.id;
     const isLive = Boolean(channel.badge?.toUpperCase().includes('LIVE') || channel.badge?.includes('مباشر'));
-    const qualityLabel = isLive
-      ? 'LIVE HD'
-      : channel.resolution === '4K'
-      ? '4K HDR'
-      : channel.resolution || 'ULTRA HD';
-    const ratingScore = getCardRating(channel.id);
 
     return (
       <div
         key={channel.id}
         data-channel-id={channel.id}
-        data-channel-group={channel.group}
-        data-channel-name={channel.name}
-        onMouseMove={handleCardMouseMove}
-        onMouseLeave={handleCardMouseLeave}
-        className={`group/card relative overflow-hidden transition-all duration-200 ease-out cursor-pointer will-change-transform ${
-          isClassic
-            ? `rounded-md bg-[#181818] border border-white/10 ${
-                isFocused
-                  ? 'ring-2 ring-[#E50914] scale-105 z-30 shadow-2xl'
-                  : 'md:hover:scale-105 md:hover:z-30 shadow-md'
-              }`
-            : `rounded-xl modern-glass glass-border-glow ${
-                isFocused
-                  ? 'ring-2 ring-[#E50914] scale-[1.06] z-30 shadow-[0_20px_50px_rgba(229,9,20,0.4)]'
-                  : 'md:hover:z-30 hover:shadow-[0_24px_56px_rgba(0,0,0,0.95),0_0_28px_rgba(229,9,20,0.24)]'
-              }`
-        } ${isGrid ? 'w-full' : 'flex-none w-48 sm:w-56 md:w-64 lg:w-72 snap-start'}`}
-        onClick={() => {
-          playCyberClick();
-          isMovieOrSeriesChannel(channel) ? onOpenDetails(channel) : onPlayChannel(channel);
-        }}
+        className={`group/card relative rounded-md overflow-hidden bg-[#181818] transition-all duration-300 ease-out cursor-pointer ${
+          isGrid ? 'w-full' : 'flex-none w-48 sm:w-56 md:w-64 lg:w-72 snap-start'
+        } ${
+          isFocused
+            ? 'ring-2 ring-[#e50914] scale-[1.08] z-30 shadow-[0_18px_42px_rgba(0,0,0,0.95)]'
+            : 'md:hover:scale-[1.08] md:hover:-translate-y-1 md:hover:z-30 shadow-md hover:shadow-[0_20px_45px_rgba(0,0,0,0.95)]'
+        }`}
+        onClick={() =>
+          isMovieOrSeriesChannel(channel) ? onOpenDetails(channel) : onPlayChannel(channel)
+        }
       >
-        {!isClassic && (
-          <div
-            data-holo-sheen
-            className="absolute inset-0 opacity-0 transition-opacity duration-200 pointer-events-none z-30"
-          />
-        )}
-
-        {/* 16:9 Artwork */}
-        <div className="aspect-video w-full relative overflow-hidden bg-[#101014]">
+        {/* Pure Clean 16:9 Artwork */}
+        <div className="aspect-video w-full relative overflow-hidden bg-zinc-900">
           <ChannelThumbnail
             channel={channel}
             customCover={customCover}
             className="w-full h-full object-cover object-center group-hover/card:scale-105 transition-transform duration-500"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent md:group-hover/card:opacity-0 transition-opacity duration-300 pointer-events-none" />
+          {/* Subtle Bottom Scrim for Title Contrast when Idle */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:group-hover/card:opacity-0 transition-opacity duration-300 pointer-events-none" />
 
+          {/* Clean Single-Line Title when Idle (No overlapping corner pills/icons) */}
           <div className="absolute bottom-0 left-0 right-0 p-2.5 text-right md:group-hover/card:opacity-0 transition-opacity duration-200 z-10 pointer-events-none">
             <h3 className="text-xs sm:text-sm font-bold text-white truncate drop-shadow">
               {channel.name}
             </h3>
           </div>
 
-          {/* Hover Overlay */}
-          <div
-            className={`hidden md:flex flex-col justify-between absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 p-3 z-20 ${
-              isClassic
-                ? 'bg-gradient-to-t from-black via-black/75 to-black/20'
-                : 'bg-gradient-to-t from-[#07070c] via-[#0e0e16]/82 to-[#0e0e16]/25'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2 text-[11px] font-bold">
-              <span
-                className={`font-['Outfit'] tracking-wide ${
-                  isClassic
-                    ? 'text-zinc-200'
-                    : theme === '2077'
-                    ? 'text-cyan-300'
-                    : theme === 'galaxy'
-                    ? 'text-purple-300'
-                    : 'text-[#ff4d58]'
-                }`}
-              >
-                {qualityLabel}
-              </span>
-              <span className="flex items-center gap-1 text-amber-300 font-mono tabular-nums">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span>{ratingScore}</span>
-              </span>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    data-play-btn="true"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playCyberClick();
-                      onPlayChannel(channel);
-                    }}
-                    aria-label={`تشغيل ${channel.name}`}
-                    className="w-8 h-8 rounded-full bg-white hover:bg-[#E50914] text-black hover:text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 cursor-pointer"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playCyberClick();
-                      onToggleFavorite(channel.id);
-                    }}
-                    aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
-                    title={isFav ? 'في قائمتي المفضلة' : 'إضافة إلى قائمتي (+)'}
-                    className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
-                      isFav
-                        ? 'bg-[#e50914] border-[#e50914] text-white'
-                        : 'bg-black/60 hover:border-white border-white/30 text-white'
-                    }`}
-                  >
-                    {isFav ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-4 h-4" />}
-                  </button>
-                </div>
+          {/* Netflix Hover Mini-Drawer Overlay (Reveals ONLY on Hover) */}
+          <div className="hidden md:flex flex-col justify-end absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/85 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 p-3 z-20">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPlayChannel(channel);
+                  }}
+                  aria-label={`تشغيل ${channel.name}`}
+                  className="w-8 h-8 rounded-full bg-white hover:bg-zinc-200 text-black flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                </button>
 
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    playCyberClick();
-                    onOpenDetails(channel);
+                    onToggleFavorite(channel.id);
                   }}
-                  aria-label="المزيد من المعلومات"
-                  title="المزيد من المعلومات"
-                  className="w-8 h-8 rounded-full bg-black/60 border border-white/30 hover:border-white text-white flex items-center justify-center transition-all cursor-pointer"
+                  aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
+                  title={isFav ? 'في قائمتي المفضلة' : 'إضافة إلى قائمتي (+)'}
+                  className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+                    isFav
+                      ? 'bg-[#e50914] border-[#e50914] text-white'
+                      : 'bg-[#2a2a2a]/80 hover:border-white border-zinc-400 text-white'
+                  }`}
                 >
-                  <ChevronDown className="w-4 h-4" />
+                  {isFav ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-4 h-4" />}
                 </button>
               </div>
 
-              <h3 className="text-xs font-extrabold text-white truncate text-right leading-snug">
-                {channel.name}
-              </h3>
-              <p className="text-[10px] text-zinc-300/90 truncate text-right mt-0.5">
-                {channel.description || channel.group}
-              </p>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenDetails(channel);
+                }}
+                aria-label="المزيد من المعلومات"
+                title="المزيد من المعلومات"
+                className="w-8 h-8 rounded-full bg-[#2a2a2a]/80 border border-zinc-400 hover:border-white text-white flex items-center justify-center transition-all cursor-pointer"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+
+            <h3 className="text-xs font-extrabold text-white truncate text-right leading-snug">
+              {channel.name}
+            </h3>
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-300 mt-0.5 truncate">
+              <span className="text-emerald-400 font-extrabold">
+                {isLive ? 'LIVE' : channel.resolution || 'HD'}
+              </span>
+              <span aria-hidden="true" className="text-zinc-500">·</span>
+              <span className="truncate">{channel.group}</span>
             </div>
           </div>
         </div>
@@ -413,11 +279,7 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
       {/* Row Header */}
       <div className="flex items-baseline justify-between mb-2.5 sm:mb-3 text-right">
         <div className="flex items-center gap-2 sm:gap-2.5">
-          {icon && (
-            <span className={isClassic ? 'text-[#e50914]' : 'text-[#e50914] drop-shadow-[0_0_10px_rgba(229,9,20,0.7)]'}>
-              {icon}
-            </span>
-          )}
+          {icon && <span className="text-[#e50914]">{icon}</span>}
           <h2 className="text-base sm:text-lg md:text-xl font-extrabold text-white tracking-wide">
             {title}
           </h2>
@@ -427,22 +289,12 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
             </span>
           )}
         </div>
-        <span
-          className={`text-[11px] sm:text-xs font-mono ${
-            isClassic
-              ? 'text-zinc-400'
-              : theme === '2077'
-              ? 'text-cyan-300/80'
-              : theme === 'galaxy'
-              ? 'text-purple-300/85'
-              : 'text-zinc-400'
-          }`}
-        >
+        <span className="text-[11px] sm:text-xs font-mono text-zinc-500">
           {channels.length} {variant === 'spotify' ? 'أغنية' : 'عناصر'}
         </span>
       </div>
 
-      {/* Grid Layout */}
+      {/* Grid Layout (e.g. dedicated Spotify Music Tab) */}
       {layout === 'grid' ? (
         <div
           className={
@@ -456,21 +308,21 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
           )}
         </div>
       ) : (
+        /* Horizontal Carousel Layout */
         <div className="relative">
+          {/* Right Scroll Arrow (Reveals only on Row Hover) */}
           <button
-            onClick={() => {
-              playCyberClick();
-              scroll('right');
-            }}
-            className={`${arrowBtnClass} -right-2 ${isClassic ? 'rounded-r-md' : 'rounded-r-xl'}`}
+            onClick={() => scroll('right')}
+            className="hidden md:flex absolute -right-2 top-5 bottom-5 w-11 bg-black/70 hover:bg-black/90 text-white z-40 rounded-r-md items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 cursor-pointer backdrop-blur-sm"
             title="تمرير لليمين"
           >
             <ChevronRight className="w-7 h-7" />
           </button>
 
+          {/* Scrollable Container (Extra vertical breathing room for scale-up hover cards) */}
           <div
             ref={rowRef}
-            className="flex items-center gap-2.5 sm:gap-3 md:gap-3.5 overflow-x-auto overflow-y-visible py-6 sm:py-7 -my-4 px-1 no-scrollbar scroll-smooth snap-x snap-mandatory touch-pan-x"
+            className="flex items-center gap-2.5 sm:gap-3 md:gap-3.5 overflow-x-auto overflow-y-visible py-5 sm:py-6 -my-3 px-1 no-scrollbar scroll-smooth snap-x snap-mandatory touch-pan-x"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
           >
             {channels.map((ch) =>
@@ -478,12 +330,10 @@ export const NetflixRow: React.FC<NetflixRowProps> = ({
             )}
           </div>
 
+          {/* Left Scroll Arrow (Reveals only on Row Hover) */}
           <button
-            onClick={() => {
-              playCyberClick();
-              scroll('left');
-            }}
-            className={`${arrowBtnClass} -left-2 ${isClassic ? 'rounded-l-md' : 'rounded-l-xl'}`}
+            onClick={() => scroll('left')}
+            className="hidden md:flex absolute -left-2 top-5 bottom-5 w-11 bg-black/70 hover:bg-black/90 text-white z-40 rounded-l-md items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 cursor-pointer backdrop-blur-sm"
             title="تمرير لليسار"
           >
             <ChevronLeft className="w-7 h-7" />

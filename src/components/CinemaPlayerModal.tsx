@@ -124,12 +124,6 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
   const [selectedAudioTrack, setSelectedAudioTrack] = useState<string>('ar');
   const [hoverThumbnailUrl, setHoverThumbnailUrl] = useState<string | null>(null);
   const [sleepRemainingSeconds, setSleepRemainingSeconds] = useState<number | null>(null);
-  const [ambientRgb, setAmbientRgb] = useState<{ r: number; g: number; b: number }>({
-    r: 229,
-    g: 9,
-    b: 20
-  });
-  const ambientCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const lastPreviewCaptureRef = useRef<number>(0);
 
   const volume = externalVolume !== undefined ? externalVolume : internalVolume;
@@ -591,65 +585,6 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
     return () => clearTimeout(timerId);
   }, [sleepRemainingSeconds, isOpen, isYouTube, sendYouTubeCommand, onClose]);
 
-  // Ambient Light Sync Sampler (samples <video> into 4x4 canvas safely every ~850ms)
-  useEffect(() => {
-    if (!isOpen || isMinimized || isWebHub || isYouTube || !isPlaying) return;
-
-    if (!ambientCanvasRef.current && typeof document !== 'undefined') {
-      const c = document.createElement('canvas');
-      c.width = 4;
-      c.height = 4;
-      ambientCanvasRef.current = c;
-    }
-
-    const sampleAmbient = () => {
-      const video = videoRef.current;
-      const canvas = ambientCanvasRef.current;
-      if (!video || !canvas || video.readyState < 2) return;
-      try {
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) return;
-        ctx.drawImage(video, 0, 0, 4, 4);
-        const data = ctx.getImageData(0, 0, 4, 4).data;
-        let r = 0;
-        let g = 0;
-        let b = 0;
-        const pixels = data.length / 4;
-        for (let i = 0; i < data.length; i += 4) {
-          r += data[i];
-          g += data[i + 1];
-          b += data[i + 2];
-        }
-        r = Math.round(r / pixels);
-        g = Math.round(g / pixels);
-        b = Math.round(b / pixels);
-        // Ensure vibrant visible ambient cinema aura even on dark scenes
-        const brightness = (r + g + b) / 3;
-        if (brightness > 18) {
-          setAmbientRgb({
-            r: Math.min(255, Math.round(r * 1.15)),
-            g: Math.min(255, Math.round(g * 1.15)),
-            b: Math.min(255, Math.round(b * 1.15))
-          });
-        }
-      } catch {
-        // Cross-origin stream fallback: gently cycle between Neon Crimson, Ruby Glow & Silver Pearl aura
-        const sec = Math.floor(Date.now() / 1500) % 3;
-        setAmbientRgb(
-          sec === 0
-            ? { r: 229, g: 9, b: 20 }
-            : sec === 1
-            ? { r: 190, g: 24, b: 93 }
-            : { r: 212, g: 212, b: 224 }
-        );
-      }
-    };
-
-    sampleAmbient();
-    const interval = setInterval(sampleAmbient, 850);
-    return () => clearInterval(interval);
-  }, [isOpen, isMinimized, isWebHub, isYouTube, isPlaying]);
-
   // Seek handler (supports both full cinema seek bar & mini player bar)
   const handleSeekToTime = useCallback(
     (targetSeconds: number) => {
@@ -820,143 +755,96 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
         className={
           isMinimized
             ? 'fixed bottom-0 left-0 w-[240px] h-[135px] opacity-0 pointer-events-none -z-10 overflow-hidden'
-            : 'fixed inset-0 z-50 bg-[#07070c] flex flex-col select-none overflow-hidden'
+            : 'fixed inset-0 z-50 bg-black flex flex-col select-none overflow-hidden'
         }
       >
-        {/* Top Floating Modern Cinema HUD Header */}
+        {/* Top Cinema Header (Clean Netflix Back Arrow & Optional Actions) */}
         {!isMinimized && (
           <div
-            className={`absolute top-3 sm:top-5 left-3 sm:left-8 right-3 sm:right-8 z-30 transition-all duration-500 ${
+            className={`absolute top-0 left-0 right-0 z-30 h-20 px-4 sm:px-8 flex items-center justify-between gap-4 bg-gradient-to-b from-black/85 via-black/35 to-transparent transition-opacity duration-300 ${
               showControls || showSettingsMenu || showTimerMenu
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 -translate-y-2 pointer-events-none'
+                ? 'opacity-100'
+                : 'opacity-0 pointer-events-none'
             }`}
           >
-            <div className="px-3.5 sm:px-5 py-2.5 rounded-2xl modern-glass border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.78)] flex items-center justify-between gap-4">
-              {/* Right (RTL start): Back Arrow & Listening Mode */}
-              <div className="flex items-center gap-2.5 shrink-0">
+            {/* Right (RTL start): Netflix Back Arrow & Listening Mode */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleBackAction();
+                }}
+                aria-label="العودة للرئيسية"
+                title={isMusicTrack ? 'تصفح مع استمرار الصوت' : 'العودة للرئيسية'}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/50 hover:bg-white/20 text-white flex items-center justify-center border border-white/20 backdrop-blur-md transition-all cursor-pointer active:scale-95"
+              >
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+
+              {!isWebHub && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleBackAction();
+                    if (document.fullscreenElement) {
+                      document.exitFullscreen().catch(() => {});
+                    }
+                    onMinimize();
                   }}
-                  aria-label="العودة للرئيسية"
-                  title={isMusicTrack ? 'تصفح مع استمرار الصوت' : 'العودة للرئيسية'}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-[#E50914] text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 hover:bg-[#E50914] text-zinc-200 hover:text-white text-xs font-semibold backdrop-blur-md border border-white/15 transition-all cursor-pointer active:scale-95"
+                  title="تصغير المشغل / وضع الاستماع المستمر"
                 >
-                  <ArrowRight className="w-5 h-5" />
+                  <Headphones className="w-4 h-4" />
+                  <span className="hidden sm:inline">وضع الاستماع</span>
+                  <ChevronDown className="w-3.5 h-3.5 hidden sm:inline" />
                 </button>
+              )}
+            </div>
 
-                {!isWebHub && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (document.fullscreenElement) {
-                        document.exitFullscreen().catch(() => {});
-                      }
-                      onMinimize();
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-[#E50914] text-zinc-200 hover:text-white text-xs font-semibold border border-white/15 transition-all cursor-pointer active:scale-95"
-                    title="تصغير المشغل / وضع الاستماع المستمر"
-                  >
-                    <Headphones className="w-4 h-4 text-[#E50914]" />
-                    <span className="hidden sm:inline">وضع الاستماع</span>
-                    <ChevronDown className="w-3.5 h-3.5 hidden sm:inline" />
-                  </button>
-                )}
+            {/* Left (RTL end): Servers Switcher & Smart Remote */}
+            <div className="flex items-center gap-2 shrink-0">
+              {channel.servers && channel.servers.length > 1 && (
+                <div className="flex items-center gap-1 bg-black/60 p-1 rounded-full border border-white/20 backdrop-blur-md overflow-x-auto no-scrollbar shrink-0">
+                  <span className="text-[10px] text-zinc-400 font-semibold px-2 hidden md:inline">السيرفر:</span>
+                  {channel.servers.map((srv) => {
+                    const isSelected = activeServer?.id === srv.id;
+                    return (
+                      <button
+                        key={srv.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveServer(srv);
+                          triggerControls();
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-medium cursor-pointer transition-all ${
+                          isSelected ? 'bg-[#E50914] text-white font-bold' : 'text-zinc-300 hover:text-white'
+                        }`}
+                      >
+                        {srv.name.replace('سيرفر ', 'S')}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
-                <span className="hidden md:inline-flex items-center gap-1.5 text-[10px] font-mono tracking-wider text-zinc-200 bg-white/5 border border-white/15 px-2.5 py-1 rounded-lg">
-                  CINEMA GLOW
-                </span>
-              </div>
-
-              {/* Left (RTL end): Servers Switcher & Smart Remote */}
-              <div className="flex items-center gap-2 shrink-0">
-                {channel.servers && channel.servers.length > 1 && (
-                  <div className="flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/15 overflow-x-auto no-scrollbar shrink-0">
-                    <span className="text-[10px] text-zinc-400 font-semibold px-2 hidden md:inline">السيرفر:</span>
-                    {channel.servers.map((srv) => {
-                      const isSelected = activeServer?.id === srv.id;
-                      return (
-                        <button
-                          key={srv.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveServer(srv);
-                            triggerControls();
-                          }}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-medium cursor-pointer transition-all ${
-                            isSelected
-                              ? 'bg-[#E50914] text-white font-bold shadow-[0_0_12px_rgba(229,9,20,0.55)]'
-                              : 'text-zinc-300 hover:text-white'
-                          }`}
-                        >
-                          {srv.name.replace('سيرفر ', 'S')}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {onOpenRemote && !isWebHub && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenRemote();
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-[#E50914] text-white text-xs font-semibold border border-white/15 transition-all cursor-pointer active:scale-95"
-                    title="فتح الريموت الذكي"
-                  >
-                    <Tv className="w-4 h-4 text-[#E50914]" />
-                    <span className="hidden sm:inline">الريموت</span>
-                  </button>
-                )}
-              </div>
+              {onOpenRemote && !isWebHub && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenRemote();
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 hover:bg-[#E50914] text-white text-xs font-semibold backdrop-blur-md border border-white/20 transition-all cursor-pointer active:scale-95"
+                  title="فتح الريموت الذكي"
+                >
+                  <Tv className="w-4 h-4" />
+                  <span className="hidden sm:inline">الريموت</span>
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        {/* 2. Media Viewport with Ambient Cinema Aura */}
-        <div
-          className={`relative flex-1 bg-[#07070c] flex items-center justify-center overflow-hidden ${
-            !isMinimized && !isFullscreen && !isWebHub ? 'p-2 sm:p-6 md:p-10' : ''
-          }`}
-        >
-          {/* Ambient Cinema Backdrop Halo */}
-          {!isMinimized && !isWebHub && (
-            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute inset-0 opacity-40 scale-125 blur-[80px] transition-all duration-1000">
-                <ChannelThumbnail
-                  channel={channel}
-                  customCover={customCovers[channel.id]}
-                  isBanner={true}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div
-                className="absolute inset-0 transition-all duration-700"
-                style={{
-                  background: `radial-gradient(ellipse at center, rgba(${ambientRgb.r}, ${ambientRgb.g}, ${ambientRgb.b}, 0.36) 0%, rgba(229, 9, 20, 0.16) 45%, rgba(7, 7, 12, 0.96) 88%)`
-                }}
-              />
-            </div>
-          )}
-
-          {/* Illuminated Cinema Screen Stage */}
-          <div
-            className={`relative w-full h-full flex items-center justify-center overflow-hidden transition-all duration-500 ${
-              !isMinimized && !isFullscreen && !isWebHub
-                ? 'max-w-[1440px] rounded-2xl bg-black border border-white/15'
-                : 'bg-black'
-            }`}
-            style={
-              !isMinimized && !isFullscreen && !isWebHub
-                ? {
-                    boxShadow: `0 0 95px 12px rgba(${ambientRgb.r}, ${ambientRgb.g}, ${ambientRgb.b}, 0.42), 0 24px 70px rgba(0, 0, 0, 0.92)`
-                  }
-                : undefined
-            }
-          >
+        {/* 2. Media Viewport (Kept alive seamlessly across Minimized & Fullscreen!) */}
+        <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
           {channel.type === 'netflix' ? (
             <NetflixHub onBackToChannels={onClose} />
           ) : channel.type === 'web' ? (
@@ -1089,25 +977,23 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
               </button>
             </div>
           )}
-          </div>
         </div>
 
-        {/* 3. Floating Futuristic Spaceship HUD Bottom Control Bar */}
+        {/* 3. Netflix Fullscreen Bottom Control Bar */}
         {!isMinimized && !isWebHub && (
           <div
             onClick={(e) => e.stopPropagation()}
             onMouseMove={triggerControls}
-            className={`absolute bottom-3 sm:bottom-5 left-3 sm:left-8 right-3 sm:right-8 z-30 transition-all duration-500 safe-area-pb ${
+            className={`absolute bottom-0 left-0 right-0 z-30 pt-16 pb-4 sm:pb-6 px-4 sm:px-8 md:px-12 flex flex-col gap-3 bg-gradient-to-t from-black/95 via-black/75 to-transparent transition-opacity duration-300 safe-area-pb ${
               showControls ||
               showSettingsMenu ||
               showTimerMenu ||
               showSubtitlesMenu ||
               showEpisodesDrawer
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 translate-y-3 pointer-events-none'
+                ? 'opacity-100'
+                : 'opacity-0 pointer-events-none'
             }`}
           >
-            <div className="px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl modern-glass border border-white/15 shadow-[0_14px_45px_rgba(0,0,0,0.88),0_0_28px_rgba(229,9,20,0.16)] flex flex-col gap-2.5">
             {/* Row 1: Netflix Red Timeline Scrubber (#E50914) + Hover Thumbnail Preview + Remaining Time */}
             {duration > 0 ? (
               <div dir="ltr" className="flex items-center gap-3 w-full">
@@ -1363,7 +1249,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
                   {showEpisodesDrawer && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-12 left-0 w-72 sm:w-80 max-h-80 overflow-y-auto modern-glass glass-border-glow border border-white/15 rounded-2xl p-3.5 shadow-2xl space-y-2.5 text-right z-40"
+                      className="absolute bottom-12 left-0 w-72 sm:w-80 max-h-80 overflow-y-auto bg-[#181818]/95 backdrop-blur-xl border border-white/15 rounded-xl p-3.5 shadow-2xl space-y-2.5 text-right z-40"
                     >
                       <div className="flex items-center justify-between border-b border-white/10 pb-2">
                         <span className="text-xs font-bold text-white flex items-center gap-1.5">
@@ -1492,7 +1378,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
                   {showSubtitlesMenu && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-12 left-0 w-72 modern-glass glass-border-glow border border-white/15 rounded-2xl p-3.5 shadow-2xl text-right z-40"
+                      className="absolute bottom-12 left-0 w-72 bg-[#181818]/95 backdrop-blur-xl border border-white/15 rounded-xl p-3.5 shadow-2xl text-right z-40"
                     >
                       <div className="grid grid-cols-2 gap-3">
                         {/* Audio Column */}
@@ -1588,7 +1474,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
                   {showSettingsMenu && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-12 left-0 w-60 modern-glass glass-border-glow border border-white/15 rounded-2xl p-3.5 shadow-2xl space-y-3 text-right z-40"
+                      className="absolute bottom-12 left-0 w-60 bg-[#181818]/95 backdrop-blur-xl border border-white/15 rounded-xl p-3.5 shadow-2xl space-y-3 text-right z-40"
                     >
                       <div className="flex items-center justify-between border-b border-white/10 pb-2">
                         <span className="text-xs font-bold text-white">سرعة التشغيل والجودة</span>
@@ -1687,7 +1573,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
                   {showTimerMenu && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-12 left-0 w-48 modern-glass glass-border-glow border border-white/15 rounded-2xl p-3 shadow-2xl space-y-1.5 text-right z-40"
+                      className="absolute bottom-12 left-0 w-48 bg-[#181818]/95 backdrop-blur-xl border border-white/15 rounded-xl p-3 shadow-2xl space-y-1.5 text-right z-40"
                     >
                       <div className="text-xs font-bold text-white border-b border-white/10 pb-1.5 mb-1">
                         مؤقت إيقاف التشغيل
@@ -1745,7 +1631,6 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
                 </button>
               </div>
             </div>
-            </div>
           </div>
         )}
       </div>
@@ -1753,7 +1638,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
       {/* 2. SPOTIFY-STYLE STICKY BOTTOM MINI PLAYER BAR (When Minimized) */}
       {isMinimized && !isWebHub && (
         <div
-          className="fixed left-0 right-0 bottom-[58px] md:bottom-0 z-40 modern-glass border-t border-white/15 shadow-[0_-10px_40px_rgba(0,0,0,0.88)] select-none animate-in slide-in-from-bottom-4 duration-300"
+          className="fixed left-0 right-0 bottom-[58px] md:bottom-0 z-40 bg-[#121212]/95 backdrop-blur-2xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.85)] select-none animate-in slide-in-from-bottom-4 duration-300"
         >
           {/* Spotify-style Interactive Progress Line on Top Edge */}
           <div
