@@ -5,6 +5,16 @@ export interface ChannelServer {
   type: 'youtube' | 'hls' | 'video' | 'embed' | 'web';
 }
 
+export interface ChannelEpisode {
+  id: string;
+  number: number;
+  title: string;
+  duration?: string;
+  url: string;
+  thumbnail?: string;
+  description?: string;
+}
+
 export interface Channel {
   id: string;
   name: string;
@@ -20,6 +30,14 @@ export interface Channel {
   youtubeId?: string;
   embedUrl?: string;
   duration?: number;
+  durationLabel?: string;
+  year?: string;
+  maturityRating?: 'kids' | '7+' | '13+' | '16+' | '18+' | 'عائلي';
+  cast?: string[];
+  director?: string;
+  collectionName?: string;
+  isRecentlyAdded?: boolean;
+  episodes?: ChannelEpisode[];
   description?: string;
   servers?: ChannelServer[];
   badge?: string; // e.g. "LIVE", "الأكثر مشاهدة", "جديد"

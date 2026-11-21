@@ -1,5 +1,23 @@
-import { UserProfile } from '../types/profile';
+import { ProfilePreferences, UserProfile } from '../types/profile';
 import fallbackKidsAvatar from '../assets/images/cartoon_lion_1794516444582.jpg';
+
+export const DEFAULT_PROFILE_PREFERENCES: ProfilePreferences = {
+  language: 'ar',
+  maturityRating: '18+',
+  autoplayNext: true,
+  autoplayPreviews: true,
+  subtitleLanguage: 'ar',
+  subtitleSize: 'medium'
+};
+
+export const DEFAULT_KIDS_PROFILE_PREFERENCES: ProfilePreferences = {
+  language: 'ar',
+  maturityRating: 'kids',
+  autoplayNext: true,
+  autoplayPreviews: false,
+  subtitleLanguage: 'ar',
+  subtitleSize: 'medium'
+};
 
 export interface ProfileAvatarOption {
   id: string;
@@ -135,12 +153,24 @@ export const AVAILABLE_AVATARS_WITH_KIDS: ProfileAvatarOption[] = [
 
 export const DEFAULT_PROFILES: UserProfile[] = [
   {
+    id: 'profile-main',
+    name: 'الحساب الرئيسي',
+    avatar: AVAILABLE_AVATARS[0].url,
+    isKids: false,
+    isPrimary: true,
+    bgColor: '#E50914',
+    createdAt: 1700000000000,
+    preferences: { ...DEFAULT_PROFILE_PREFERENCES }
+  },
+  {
     id: 'profile-kids',
     name: 'الأطفال',
     avatar: DEFAULT_KIDS_AVATAR_URL,
     isKids: true,
+    isPrimary: false,
     pin: DEFAULT_KIDS_EXIT_PIN,
     bgColor: '#f59e0b',
-    createdAt: 1700000001000
+    createdAt: 1700000001000,
+    preferences: { ...DEFAULT_KIDS_PROFILE_PREFERENCES }
   }
 ];

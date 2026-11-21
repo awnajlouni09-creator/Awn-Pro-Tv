@@ -3,6 +3,7 @@ import { History, Play, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { ContinueWatchingItem } from '../types/history';
 import { Channel } from '../types/iptv';
 import { ChannelThumbnail } from './ChannelThumbnail';
+import { AppThemeId } from './ParticleNebulaBg';
 
 interface ContinueWatchingRowProps {
   items: ContinueWatchingItem[];
@@ -10,6 +11,7 @@ interface ContinueWatchingRowProps {
   onRemoveItem: (channelId: string) => void;
   customCovers?: Record<string, string>;
   focusedChannelId?: string | null;
+  theme?: AppThemeId;
 }
 
 export const ContinueWatchingRow: React.FC<ContinueWatchingRowProps> = ({
@@ -17,9 +19,11 @@ export const ContinueWatchingRow: React.FC<ContinueWatchingRowProps> = ({
   onPlayChannel,
   onRemoveItem,
   customCovers = {},
-  focusedChannelId = null
+  focusedChannelId = null,
+  theme = 'action'
 }) => {
   const rowRef = useRef<HTMLDivElement>(null);
+  const isClassic = theme === 'netflix';
 
   if (!items || items.length === 0) return null;
 
@@ -69,11 +73,21 @@ export const ContinueWatchingRow: React.FC<ContinueWatchingRowProps> = ({
               <div
                 key={channel.id}
                 data-channel-id={channel.id}
+                data-channel-group={channel.group}
+                data-channel-name={channel.name}
                 onClick={() => onPlayChannel(channel, currentTime > 5 ? currentTime : undefined)}
-                className={`group/card relative flex-none w-48 sm:w-56 md:w-64 lg:w-72 snap-start aspect-video rounded-md overflow-hidden bg-[#181818] transition-all duration-300 ease-out cursor-pointer ${
-                  isFocused
-                    ? 'ring-2 ring-[#e50914] scale-[1.08] z-30 shadow-[0_18px_42px_rgba(0,0,0,0.95)]'
-                    : 'md:hover:scale-[1.08] md:hover:-translate-y-1 md:hover:z-30 shadow-md hover:shadow-[0_20px_45px_rgba(0,0,0,0.95)]'
+                className={`group/card relative flex-none w-48 sm:w-56 md:w-64 lg:w-72 snap-start aspect-video overflow-hidden transition-all duration-300 ease-out cursor-pointer ${
+                  isClassic
+                    ? `rounded-md bg-[#181818] border border-white/10 ${
+                        isFocused
+                          ? 'ring-2 ring-[#E50914] scale-105 z-30 shadow-2xl'
+                          : 'md:hover:scale-105 md:hover:z-30 shadow-md'
+                      }`
+                    : `rounded-xl modern-glass glass-border-glow ${
+                        isFocused
+                          ? 'ring-2 ring-[#E50914] scale-[1.08] z-30 shadow-[0_18px_42px_rgba(229,9,20,0.38)]'
+                          : 'md:hover:scale-[1.06] md:hover:-translate-y-2 md:hover:z-30 shadow-md hover:shadow-[0_24px_48px_rgba(0,0,0,0.95),0_0_24px_rgba(229,9,20,0.22)]'
+                      }`
                 }`}
               >
                 <div className="w-full h-full relative overflow-hidden bg-zinc-900">
