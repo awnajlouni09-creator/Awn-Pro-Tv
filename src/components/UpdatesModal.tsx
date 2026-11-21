@@ -133,7 +133,6 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
           return;
         }
 
-        // Collect channels from `channels`, and optionally merge `movies` / `series` if provided separately
         const mergedChannels: Channel[] = [];
         const seenIds = new Set<string>();
 
@@ -233,33 +232,38 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 select-none overflow-y-auto"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+      dir="rtl"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-[#181818] border border-white/10 rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.92)] overflow-hidden text-white animate-in fade-in zoom-in-95 duration-200 my-auto"
+        className="w-full max-w-lg bg-[#181818] border border-white/10 rounded-xl shadow-2xl overflow-hidden text-white"
       >
         {/* Header */}
-        <div className="px-6 py-4 bg-[#141414] border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <RefreshCw className="w-5 h-5 text-[#E50914]" />
-            <h2 className="text-lg font-bold text-white">تحديثات Awn Tv pro</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#141414]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center text-[#E50914]">
+              <RefreshCw className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">التحديثات</h2>
+              <p className="text-xs text-zinc-400">تحديث مكتبة الأفلام والمسلسلات والقنوات</p>
+            </div>
           </div>
           <button
-            type="button"
             onClick={onClose}
-            aria-label="إغلاق نافذة التحديثات"
-            className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="إغلاق"
+            className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 space-y-5 text-right">
+        {/* Content */}
+        <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
           {/* Current Installed Version Card */}
-          <div className="p-4 sm:p-5 bg-[#141414] border border-white/10 rounded-lg space-y-2">
-            <div className="flex items-center justify-between gap-3">
+          <div className="p-4 bg-[#141414] border border-white/10 rounded-lg space-y-2">
+            <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-zinc-400">الإصدار الحالي المثبت</span>
               <span className="font-mono tabular-nums text-sm font-bold text-[#E50914]">
                 v{currentVersion.version.replace(/^v/i, '')}
@@ -267,125 +271,3 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
             </div>
             <p className="text-base font-bold text-white">{currentVersion.versionName}</p>
             {formattedUpdatedAt && (
-              <p className="text-xs text-zinc-400">
-                آخر تثبيت: {formattedUpdatedAt}
-              </p>
-            )}
-            {currentVersion.notes && (
-              <p className="text-xs text-zinc-300 leading-relaxed pt-2 border-t border-white/10">
-                {currentVersion.notes}
-              </p>
-            )}
-          </div>
-
-          </div>
-
-          {/* Latest Update Direct Download Option */}
-          <div className="p-4 bg-[#141414] border border-[#E50914]/35 rounded-lg flex items-center justify-between gap-4">
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm sm:text-base font-bold text-white">آخر تحديث</span>
-                <span className="font-mono text-[11px] font-semibold text-[#E50914] bg-[#E50914]/15 px-2 py-0.5 rounded">
-                  2026-11-20
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 leading-relaxed truncate" dir="ltr">
-                awn-tv-pro-backup-2026-11-20.json
-              </p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                حمّل ملف آخر تحديث ثم اختره من الزر بالأسفل لتثبيته.
-              </p>
-            </div>
-
-            <a
-              href="https://www.mediafire.com/file/r47ehl8pzzpv43d/awn-tv-pro-backup-2026-11-21_%25285%2529_%25282%2529.json/file"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="تحميل آخر تحديث"
-              className="px-4 py-2.5 rounded-lg bg-[#E50914]/15 hover:bg-[#E50914] text-[#ff4d56] hover:text-white border border-[#E50914]/40 font-bold text-xs sm:text-sm flex items-center gap-2 shrink-0 transition-all cursor-pointer active:scale-95"
-            >
-              <Download className="w-4 h-4" />
-              <span>تحميل آخر تحديث</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-            </a>
-          </div>
-
-          {/* Primary Upload / Install New Version CTA */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,application/json"
-            onChange={handleFileSelected}
-            className="hidden"
-          />
-
-          <div className="space-y-2.5">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full py-3.5 px-6 bg-[#E50914] hover:bg-[#f40612] text-white font-bold text-sm sm:text-base rounded-lg shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-[0.99]"
-            >
-              <Download className="w-5 h-5" />
-              <span>تحميل وتثبيت إصدار جديد</span>
-            </button>
-            <p className="text-xs text-zinc-400 leading-relaxed text-center">
-              اختر ملف التحديث (<span className="font-mono text-zinc-300">.json</span>) من جهازك لتحديث جميع الأفلام، المسلسلات، القنوات، والمباريات فوراً.
-            </p>
-          </div>
-
-          {/* Confirmation Message */}
-          {installedSummary && (
-            <div className="p-4 bg-emerald-950/40 border border-emerald-500/35 rounded-lg space-y-3 animate-in fade-in duration-200">
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-bold text-emerald-300">
-                    تم تثبيت الإصدار الجديد بنجاح!
-                  </p>
-                  <p className="text-xs text-white font-semibold">
-                    {installedSummary.versionName}{' '}
-                    <span className="font-mono text-emerald-300">
-                      (v{installedSummary.version.replace(/^v/i, '')})
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-emerald-500/20 text-center">
-                <div className="p-2 bg-black/30 rounded">
-                  <Film className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs font-mono font-bold text-white tabular-nums">
-                    {installedSummary.moviesAndSeriesCount}
-                  </p>
-                  <p className="text-[11px] text-zinc-400">أفلام ومسلسلات</p>
-                </div>
-                <div className="p-2 bg-black/30 rounded">
-                  <Tv className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs font-mono font-bold text-white tabular-nums">
-                    {installedSummary.channelsCount}
-                  </p>
-                  <p className="text-[11px] text-zinc-400">إجمالي الباقات</p>
-                </div>
-                <div className="p-2 bg-black/30 rounded">
-                  <Trophy className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-xs font-mono font-bold text-white tabular-nums">
-                    {installedSummary.matchesCount}
-                  </p>
-                  <p className="text-[11px] text-zinc-400">مباريات</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Error Feedback */}
-          {errorMessage && (
-            <div className="p-3.5 bg-red-950/40 border border-[#E50914]/40 rounded-lg flex items-start gap-2.5 text-xs text-red-200 animate-in fade-in duration-200">
-              <AlertCircle className="w-4 h-4 text-[#E50914] shrink-0 mt-0.5" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
