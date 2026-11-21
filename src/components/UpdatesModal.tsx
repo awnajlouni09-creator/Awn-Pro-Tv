@@ -278,31 +278,6 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
             )}
           </div>
 
-          {/* All Updates Here — WhatsApp Group Link */}
-          <div className="p-4 bg-[#141414] border border-white/10 rounded-lg flex items-center justify-between gap-4">
-            <div className="space-y-1 min-w-0">
-              <p className="text-sm sm:text-base font-bold text-white">جميع التحديثات هنا</p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                اضغط على صورة الواتساب للدخول مباشرة إلى قروب التحديثات والحصول على ملفات الإصدارات الجديدة.
-              </p>
-            </div>
-
-            <a
-              href="https://chat.whatsapp.com/DwY58pzMYPMHsgF6lRvHkO"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="الدخول إلى قروب التحديثات عبر واتساب"
-              title="اضغط للدخول إلى قروب الواتساب"
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#25D366]/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            >
-              <svg
-                viewBox="0 0 32 32"
-                className="w-8 h-8 sm:w-9 sm:h-9 fill-current"
-                aria-hidden="true"
-              >
-                <path d="M16.002 3C8.832 3 3 8.832 3 16c0 2.29.598 4.525 1.734 6.494L3.06 28.94l6.607-1.644A12.94 12.94 0 0 0 16.002 29C23.17 29 29 23.168 29 16S23.17 3 16.002 3Zm0 23.62c-1.997 0-3.954-.536-5.658-1.548l-.406-.241-3.922.976 1.047-3.823-.265-.422A10.57 10.57 0 0 1 5.38 16c0-5.857 4.765-10.62 10.622-10.62 5.856 0 10.62 4.763 10.62 10.62 0 5.856-4.764 10.62-10.62 10.62Zm5.826-7.953c-.32-.16-1.89-.933-2.183-1.04-.293-.106-.506-.16-.72.16-.213.32-.826 1.04-1.013 1.253-.186.213-.373.24-.693.08-.32-.16-1.35-.498-2.572-1.588-.951-.848-1.593-1.896-1.78-2.216-.186-.32-.02-.493.14-.652.144-.143.32-.373.48-.56.16-.186.213-.32.32-.533.106-.213.053-.4-.027-.56-.08-.16-.72-1.734-.986-2.374-.26-.624-.524-.54-.72-.55l-.613-.011c-.213 0-.56.08-.853.4-.293.32-1.12 1.094-1.12 2.668s1.146 3.094 1.306 3.307c.16.213 2.256 3.445 5.465 4.83.763.33 1.359.527 1.823.674.766.244 1.464.21 2.015.127.615-.092 1.89-.773 2.156-1.52.266-.746.266-1.386.186-1.52-.08-.133-.293-.213-.613-.373Z" />
-              </svg>
-            </a>
           </div>
 
           {/* Latest Update Direct Download Option */}
