@@ -887,7 +887,7 @@ export default function App() {
 
   const handleImportBackup = (payload: AdminBackupPayload) => {
     setAllChannels(payload.channels);
-   if (!hasValidSubscription) {
+   if (payload.categories) setCategories(payload.categories);
 
     setCustomCovers(payload.customCovers);
     try {
