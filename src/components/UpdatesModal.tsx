@@ -271,3 +271,70 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
               </span>
             </div>
             <p className="text-base font-bold text-white">{currentVersion.versionName}</p>
+          </div>
+
+          <div className="p-4 bg-[#141414] border border-[#E50914]/35 rounded-lg flex items-center justify-between gap-4">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm sm:text-base font-bold text-white">آخر تحديث</span>
+                <span className="font-mono text-[11px] font-semibold text-[#E50914] bg-[#E50914]/15 px-2 py-0.5 rounded">
+                  2026-11-21
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 leading-relaxed truncate" dir="ltr">
+                awn-tv-pro-backup-2026-11-21 (5) (2).json
+              </p>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                حمّل ملف آخر تحديث ثم اختره من الزر بالأسفل لتثبيته.
+              </p>
+            </div>
+
+            <a
+              href="https://www.mediafire.com/file/r47ehl8pzzpv43d/awn-tv-pro-backup-2026-11-21_%25285%2529_%25282%2529.json/file"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2.5 rounded-lg bg-[#E50914]/15 hover:bg-[#E50914] text-[#ff4d56] hover:text-white border border-[#E50914]/40 font-bold text-xs flex items-center gap-2 shrink-0 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              <span>تحميل آخر تحديث</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleFileSelected}
+            className="hidden"
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full py-3.5 px-5 rounded-lg bg-[#E50914] hover:bg-[#f40612] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-[#E50914]/20 transition-all cursor-pointer"
+          >
+            <Download className="w-5 h-5" />
+            <span>تثبيت ملف التحديث (.json)</span>
+          </button>
+
+          {errorMessage && (
+            <div className="p-3.5 rounded-lg bg-red-950/50 border border-red-500/40 flex items-start gap-2.5 text-red-200 text-xs leading-relaxed">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {installedSummary && (
+            <div className="p-4 rounded-lg bg-emerald-950/40 border border-emerald-500/40 space-y-2 text-emerald-100">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>تم تثبيت التحديث بنجاح ({installedSummary.versionName})</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
