@@ -338,15 +338,15 @@ export const TitleDetailsModal: React.FC<TitleDetailsModalProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-[#07070c]/85 backdrop-blur-md flex items-start justify-center p-2 sm:p-5 md:p-8 overflow-y-auto select-none"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-start justify-center p-2 sm:p-5 md:p-8 overflow-y-auto select-none"
     >
       <div
         ref={modalScrollRef}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[900px] modern-glass glass-border-glow rounded-2xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.94),0_0_40px_rgba(229,9,20,0.18)] relative text-white my-auto max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-[900px] bg-[#181818] rounded-xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.92)] border border-white/10 relative text-white my-auto max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Top Hero Image Section */}
-        <div className="relative h-64 sm:h-80 md:h-[420px] w-full overflow-hidden bg-[#07070c]">
+        <div className="relative h-64 sm:h-80 md:h-[420px] w-full overflow-hidden bg-black">
           <ChannelThumbnail
             channel={channel}
             customCover={previewUrl || customCover}
@@ -354,12 +354,12 @@ export const TitleDetailsModal: React.FC<TitleDetailsModalProps> = ({
             className="w-full h-full object-cover"
           />
 
-          {/* Smooth Obsidian Bottom Gradient Merge */}
+          {/* Smooth Netflix Bottom Gradient Merge into #181818 */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                'linear-gradient(to top, rgba(7,7,12,0.98) 0%, rgba(12,12,20,0.75) 28%, rgba(7,7,12,0.2) 65%, transparent 100%)'
+                'linear-gradient(to top, #181818 0%, rgba(24,24,24,0.78) 28%, rgba(24,24,24,0.22) 65%, transparent 100%)'
             }}
           />
 
@@ -406,10 +406,9 @@ export const TitleDetailsModal: React.FC<TitleDetailsModalProps> = ({
             )}
 
             <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-          {/* Prominent White Play / Resume Button */}
+              {/* Prominent White Play / Resume Button */}
               <button
                 type="button"
-                data-play-btn="true"
                 onClick={() => {
                   onClose();
                   onPlay(channel, hasResume ? resumeTime : undefined);

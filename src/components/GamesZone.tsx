@@ -835,7 +835,7 @@ export const GamesZone: React.FC = () => {
   const [activeGame, setActiveGame] = useState<GameTab>('xo');
 
   return (
-    <section className="min-h-screen pt-20 sm:pt-24 pb-28 px-4 sm:px-6 md:px-12 bg-[#07070c]/90">
+    <section className="min-h-screen pt-20 sm:pt-24 pb-28 px-4 sm:px-6 md:px-12 bg-[#0a0a0a]">
       <div className="max-w-5xl mx-auto">
         {/* Hero Header */}
         <div className="rounded-3xl p-5 sm:p-7 bg-gradient-to-l from-[#1a0608] via-[#141414] to-[#111111] border border-[#e50914]/35 shadow-2xl mb-6">

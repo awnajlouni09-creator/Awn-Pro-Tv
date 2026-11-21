@@ -311,11 +311,11 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-sm sm:text-base font-bold text-white">آخر تحديث</span>
                 <span className="font-mono text-[11px] font-semibold text-[#E50914] bg-[#E50914]/15 px-2 py-0.5 rounded">
-                  2026-11-21
+                  2026-11-20
                 </span>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed truncate" dir="ltr">
-                awn-tv-pro-backup-2026-11-21 (5).json
+                awn-tv-pro-backup-2026-11-20.json
               </p>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 حمّل ملف آخر تحديث ثم اختره من الزر بالأسفل لتثبيته.
@@ -323,7 +323,7 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
             </div>
 
             <a
-              href="https://www.mediafire.com/file/62ubm095k55sm9p/awn-tv-pro-backup-2026-11-21+(5).json/file"
+              href="https://www.mediafire.com/file/7l9fboktqc2tqb3/awn-tv-pro-backup-2026-11-20.json/file"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="تحميل آخر تحديث"

@@ -21,18 +21,13 @@ import {
   Megaphone,
   CreditCard,
   Download,
-  SlidersHorizontal,
-  Volume2,
-  VolumeX,
-  Sparkles
+  SlidersHorizontal
 } from 'lucide-react';
 import { UserProfile } from '../types/profile';
 import { MatchThemeId } from '../types/matches';
 import { AppNotification } from '../types/notifications';
 import { TOURNAMENT_THEMES } from '../data/defaultMatches';
 import { PWAInstallButton } from './PWAInstallButton';
-import { playCyberClick, playCyberWhoosh } from '../utils/sciFiAudio';
-import { AppThemeId } from './ParticleNebulaBg';
 
 export type NavTab =
   | 'home'
@@ -71,11 +66,6 @@ interface NetflixNavbarProps {
   onLockSubscriptionGate?: () => void;
   onOpenUpdatesModal?: () => void;
   onOpenProfileManagement?: () => void;
-  uiSoundsEnabled?: boolean;
-  onToggleUiSounds?: () => void;
-  charactersEnabled?: boolean;
-  onToggleCharacters?: () => void;
-  theme?: AppThemeId;
 }
 
 export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
@@ -101,14 +91,8 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
   subscriptionStatusText,
   onLockSubscriptionGate,
   onOpenUpdatesModal,
-  onOpenProfileManagement,
-  uiSoundsEnabled = true,
-  onToggleUiSounds,
-  charactersEnabled = true,
-  onToggleCharacters,
-  theme = 'action'
+  onOpenProfileManagement
 }) => {
-  const isClassic = theme === 'netflix';
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -167,46 +151,29 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-40 h-16 px-4 sm:px-8 md:px-12 flex items-center justify-between gap-4 select-none transition-all duration-500 ${
-        isClassic
-          ? isScrolled || isMatchesThemed
-            ? 'bg-[#141414]/95 border-b border-white/10 shadow-lg'
-            : 'bg-gradient-to-b from-black/85 via-black/40 to-transparent'
-          : isScrolled || isMatchesThemed
-          ? 'backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.78)]'
-          : 'bg-gradient-to-b from-[#07070c]/90 via-[#07070c]/45 to-transparent backdrop-blur-sm'
+        isScrolled || isMatchesThemed
+          ? 'backdrop-blur-md shadow-xl'
+          : 'bg-gradient-to-b from-black/75 via-black/30 to-transparent'
       }`}
       style={
         isMatchesThemed
           ? {
-              backgroundColor: `${activeMatchThemeObj.bgHex}e6`,
-              borderBottom: `1px solid ${activeMatchThemeObj.accentHex}55`
+              backgroundColor: `${activeMatchThemeObj.bgHex}eb`,
+              borderBottom: `1px solid ${activeMatchThemeObj.accentHex}44`
             }
-          : !isClassic && isScrolled
+          : isScrolled
           ? {
-              background:
-                theme === 'galaxy'
-                  ? 'linear-gradient(180deg, rgba(16, 10, 34, 0.9) 0%, rgba(4, 2, 15, 0.88) 100%)'
-                  : theme === '2077'
-                  ? 'linear-gradient(180deg, rgba(8, 18, 34, 0.9) 0%, rgba(5, 9, 20, 0.88) 100%)'
-                  : 'linear-gradient(180deg, rgba(18, 18, 26, 0.88) 0%, rgba(7, 7, 12, 0.85) 100%)',
-              borderBottom:
-                theme === 'galaxy'
-                  ? '1px solid rgba(192, 132, 252, 0.28)'
-                  : theme === '2077'
-                  ? '1px solid rgba(34, 211, 238, 0.3)'
-                  : '1px solid rgba(255, 255, 255, 0.1)'
+              backgroundColor: 'rgba(20, 20, 20, 0.96)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
             }
           : undefined
       }
     >
-      {/* Right Zone (RTL): Wordmark + Clean Navigation Links */}
+      {/* Right Zone (RTL): Pure Netflix-Red Wordmark + Clean Navigation Links */}
       <div className="flex items-center gap-6 lg:gap-8 min-w-0">
         <button
           type="button"
-          onClick={() => {
-            playCyberClick();
-            onSelectTab('home');
-          }}
+          onClick={() => onSelectTab('home')}
           className="cursor-pointer shrink-0 transition-transform duration-200 hover:scale-[1.03]"
           aria-label="Awn Tv pro الرئيسية"
         >
@@ -214,9 +181,7 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
             className="text-xl sm:text-2xl md:text-[26px] font-black tracking-tight font-['Outfit'] whitespace-nowrap"
             style={{
               color: isMatchesThemed ? activeMatchThemeObj.accentHex : '#E50914',
-              textShadow: isClassic
-                ? 'none'
-                : '0 0 22px rgba(229,9,20,0.5), 0 2px 10px rgba(0,0,0,0.85)'
+              textShadow: '0 2px 14px rgba(0,0,0,0.65)'
             }}
           >
             Awn Tv pro
@@ -231,10 +196,7 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    playCyberClick();
-                    onSelectTab(item.id);
-                  }}
+                  onClick={() => onSelectTab(item.id)}
                   className={`relative transition-colors duration-200 cursor-pointer py-1 flex items-center gap-1.5 ${
                     isActive
                       ? 'text-white font-bold'
@@ -243,15 +205,15 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
                 >
                   <span>{item.label}</span>
                   {item.dot && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E50914] animate-pulse shadow-[0_0_8px_#E50914]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#E50914] animate-pulse" />
                   )}
                   {isActive && (
                     <span
-                      className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full shadow-[0_0_10px_rgba(229,9,20,0.75)]"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
                       style={{
-                        background: isMatchesThemed
+                        backgroundColor: isMatchesThemed
                           ? activeMatchThemeObj.accentHex
-                          : 'linear-gradient(90deg, #E50914, #ff4d58)'
+                          : '#E50914'
                       }}
                     />
                   )}
@@ -266,10 +228,7 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
               <span>بوابة الأطفال الآمنة</span>
             </span>
             <button
-              onClick={() => {
-                playCyberClick();
-                onSelectTab(activeTab === 'games' ? 'home' : 'games');
-              }}
+              onClick={() => onSelectTab(activeTab === 'games' ? 'home' : 'games')}
               className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-zinc-200 hover:text-white cursor-pointer"
             >
               <Gamepad2 className="w-3.5 h-3.5" />
@@ -295,13 +254,13 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
         className="hidden"
       />
 
-      {/* Left Zone (RTL): Search, Notifications, Quantum Sound Toggle, Updates, Admin, Profile Avatar */}
-      <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
+      {/* Left Zone (RTL): Strictly Search, Notifications Bell, Admin Icon, Profile Avatar */}
+      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
         {/* 1. Search */}
         <div className="relative flex items-center">
           {isSearchOpen ? (
-            <div className="flex items-center modern-glass border border-white/25 rounded-xl px-2.5 py-1 text-xs w-44 sm:w-60 transition-all shadow-lg">
-              <Search className="w-4 h-4 text-[#E50914] shrink-0" />
+            <div className="flex items-center bg-[#141414]/95 border border-white/30 rounded-sm px-2.5 py-1 text-xs w-44 sm:w-60 transition-all shadow-lg">
+              <Search className="w-4 h-4 text-white/80 shrink-0" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -313,7 +272,6 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
               />
               <button
                 onClick={() => {
-                  playCyberClick();
                   onSearchChange('');
                   setIsSearchOpen(false);
                 }}
@@ -326,11 +284,10 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
           ) : (
             <button
               onClick={() => {
-                playCyberClick();
                 setIsSearchOpen(true);
                 setTimeout(() => searchInputRef.current?.focus(), 50);
               }}
-              className="p-1.5 text-white/90 hover:text-[#E50914] transition-all hover:scale-110 cursor-pointer"
+              className="p-1.5 text-white/90 hover:text-white transition-transform hover:scale-110 cursor-pointer"
               title="بحث"
               aria-label="بحث"
             >
@@ -343,25 +300,24 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
         <div className="relative shrink-0">
           <button
             onClick={() => {
-              playCyberClick();
               setIsNotificationsOpen((prev) => !prev);
               setIsProfileMenuOpen(false);
             }}
-            className="relative p-1.5 text-white/90 hover:text-[#E50914] transition-all hover:scale-110 cursor-pointer"
+            className="relative p-1.5 text-white/90 hover:text-white transition-transform hover:scale-110 cursor-pointer"
             title="الإشعارات"
             aria-label="الإشعارات"
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-[#E50914] text-white text-[10px] font-black flex items-center justify-center shadow ring-2 ring-[#07070c] tabular-nums">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-[#E50914] text-white text-[10px] font-black flex items-center justify-center shadow ring-2 ring-[#141414] tabular-nums">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
 
           {isNotificationsOpen && (
-            <div className="absolute left-0 top-full mt-3 w-72 sm:w-88 modern-glass glass-border-glow rounded-xl shadow-2xl z-50 overflow-hidden text-right animate-in fade-in zoom-in-95">
-              <div className="px-3.5 py-2.5 bg-[#0d0d14]/90 border-b border-white/10 flex items-center justify-between gap-2">
+            <div className="absolute left-0 top-full mt-3 w-72 sm:w-88 bg-[#181818] border border-white/15 rounded-md shadow-2xl z-50 overflow-hidden text-right animate-in fade-in zoom-in-95">
+              <div className="px-3.5 py-2.5 bg-[#141414] border-b border-white/10 flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-white flex items-center gap-1.5">
                   <Bell className="w-3.5 h-3.5 text-[#E50914]" />
                   <span>الإشعارات ({notifications.length})</span>
@@ -399,7 +355,6 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
                     <button
                       key={n.id}
                       onClick={() => {
-                        playCyberClick();
                         onClickNotification(n);
                         setIsNotificationsOpen(false);
                       }}
@@ -413,7 +368,7 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
                             ? 'bg-[#E50914]/25 text-[#ff4d4d]'
                             : n.type === 'sports' || n.type === 'match_alert'
                             ? 'bg-emerald-500/20 text-emerald-400'
-                            : 'bg-white/10 text-white'
+                            : 'bg-amber-400/20 text-amber-300'
                         }`}
                       >
                         {n.type === 'urgent' ? (
@@ -439,59 +394,16 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
           )}
         </div>
 
-        {/* 2b. Compact Interactive Characters Toggle */}
-        {onToggleCharacters && (
-          <button
-            type="button"
-            onClick={() => {
-              playCyberClick();
-              onToggleCharacters();
-            }}
-            title={charactersEnabled ? 'إيقاف الشخصيات' : 'تفعيل الشخصيات'}
-            aria-label="الشخصيات"
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-              charactersEnabled
-                ? 'bg-[#E50914]/15 border-[#E50914]/55 text-white hover:bg-[#E50914]/25'
-                : 'bg-white/5 border-white/15 text-zinc-400 hover:text-white'
-            }`}
-          >
-            <Sparkles className={`w-3 h-3 ${charactersEnabled ? 'text-[#ff4d58]' : 'text-zinc-400'}`} />
-            <span className="hidden sm:inline">الشخصيات</span>
-          </button>
-        )}
-
-        {/* 2c. UI Audio Mute/Unmute Toggle */}
-        {onToggleUiSounds && (
-          <button
-            type="button"
-            onClick={onToggleUiSounds}
-            title={uiSoundsEnabled ? 'كتم أصوات الواجهة' : 'تفعيل أصوات الواجهة'}
-            aria-label={uiSoundsEnabled ? 'كتم أصوات الواجهة' : 'تفعيل أصوات الواجهة'}
-            className={`p-1.5 rounded-lg border transition-all cursor-pointer shrink-0 ${
-              uiSoundsEnabled
-                ? 'modern-glass border-white/25 text-white hover:border-[#E50914]/60'
-                : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'
-            }`}
-          >
-            {uiSoundsEnabled ? (
-              <Volume2 className="w-4 h-4" />
-            ) : (
-              <VolumeX className="w-4 h-4" />
-            )}
-          </button>
-        )}
-
         {/* 3. Updates Button (التحديثات) */}
         {onOpenUpdatesModal && (
           <button
             type="button"
             onClick={() => {
-              playCyberWhoosh();
               setIsNotificationsOpen(false);
               setIsProfileMenuOpen(false);
               onOpenUpdatesModal();
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg modern-glass border border-white/20 hover:border-[#E50914]/65 text-white/95 hover:text-white text-[11px] sm:text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/90 hover:text-white text-[11px] sm:text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap"
             title="التحديثات"
             aria-label="التحديثات"
           >
@@ -502,10 +414,7 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
 
         {/* 4. Admin Panel Icon */}
         <button
-          onClick={() => {
-            playCyberWhoosh();
-            onOpenAdminPanel();
-          }}
+          onClick={onOpenAdminPanel}
           className="p-1.5 text-white/90 hover:text-[#E50914] transition-transform hover:scale-110 cursor-pointer shrink-0"
           title="لوحة التحكم (Admin)"
           aria-label="لوحة التحكم"
@@ -513,19 +422,18 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
           <ShieldCheck className="w-5 h-5" />
         </button>
 
-        {/* 5. User Profile Avatar & Menu */}
+        {/* 4. User Profile Avatar & Menu */}
         {activeProfile && (
           <div className="relative">
             <button
               onClick={() => {
-                playCyberClick();
                 setIsProfileMenuOpen((prev) => !prev);
                 setIsNotificationsOpen(false);
               }}
               className="flex items-center gap-1.5 cursor-pointer group"
               aria-label="قائمة الحساب"
             >
-              <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/25 group-hover:border-[#E50914] transition-colors bg-zinc-900 shadow-md">
+              <div className="w-8 h-8 rounded overflow-hidden border border-white/25 group-hover:border-white transition-colors bg-zinc-800">
                 <img
                   src={activeProfile.avatar}
                   alt={activeProfile.name}
@@ -542,7 +450,7 @@ export const NetflixNavbar: React.FC<NetflixNavbarProps> = ({
 
             {isProfileMenuOpen && (
               <div
-                className="absolute left-0 top-full mt-3 w-60 quantum-crystal plasma-border rounded-xl p-2 shadow-2xl z-50 text-right animate-in fade-in zoom-in-95 space-y-0.5"
+                className="absolute left-0 top-full mt-3 w-60 bg-[#181818] border border-white/15 rounded-md p-2 shadow-2xl z-50 text-right animate-in fade-in zoom-in-95 space-y-0.5"
                 onMouseLeave={() => setIsProfileMenuOpen(false)}
               >
                 <div className="px-2.5 py-2 border-b border-white/10 mb-1">
