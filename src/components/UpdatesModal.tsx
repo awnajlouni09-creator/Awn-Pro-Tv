@@ -323,7 +323,7 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
             </div>
 
             <a
-              href="https://www.mediafire.com/file/7l9fboktqc2tqb3/awn-tv-pro-backup-2026-11-20.json/file"
+              href="https://www.mediafire.com/file/r47ehl8pzzpv43d/awn-tv-pro-backup-2026-11-21_%25285%2529_%25282%2529.json/file"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="تحميل آخر تحديث"
