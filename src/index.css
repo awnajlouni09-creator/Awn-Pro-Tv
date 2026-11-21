@@ -9,31 +9,200 @@
   
   body {
     font-family: 'Cairo', 'Outfit', system-ui, -apple-system, sans-serif;
-    background-color: #141414;
+    background-color: #07070c;
     color: #ffffff;
     user-select: none;
   }
 
-  /* Custom sleek scrollbar for Smart TV look */
+  /* Custom sleek scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #141414;
+    background: #07070c;
   }
   ::-webkit-scrollbar-thumb {
-    background: #333333;
+    background: rgba(255, 255, 255, 0.22);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #cc0000;
+    background: #e50914;
   }
 }
 
-/* TV scanline & cinematic glow effects */
+/* Modern Luxury 3D Glassmorphism Surface */
+.modern-glass,
+.glass-2090,
+.quantum-crystal {
+  background: linear-gradient(
+    145deg,
+    rgba(24, 24, 34, 0.74) 0%,
+    rgba(10, 10, 16, 0.88) 100%
+  );
+  backdrop-filter: blur(20px) saturate(155%);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.78),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(229, 9, 20, 0.12);
+}
+
+/* Galaxy Theme Override */
+[data-theme='galaxy'] .modern-glass,
+[data-theme='galaxy'] .glass-2090,
+[data-theme='galaxy'] .quantum-crystal {
+  background: linear-gradient(
+    145deg,
+    rgba(28, 16, 54, 0.78) 0%,
+    rgba(10, 6, 24, 0.9) 100%
+  );
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.84),
+    inset 0 1px 0 rgba(216, 180, 254, 0.2),
+    inset 0 -1px 0 rgba(251, 191, 36, 0.16);
+}
+
+/* 2077 Cyberpunk Theme Override */
+[data-theme='2077'] .modern-glass,
+[data-theme='2077'] .glass-2090,
+[data-theme='2077'] .quantum-crystal {
+  background: linear-gradient(
+    145deg,
+    rgba(10, 24, 42, 0.8) 0%,
+    rgba(5, 9, 20, 0.92) 100%
+  );
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(34, 211, 238, 0.24),
+    inset 0 -1px 0 rgba(244, 63, 94, 0.18);
+}
+
+/* Classic Netflix Theme Override (Pure Pre-Update Classic Look) */
+[data-theme='netflix'] .modern-glass,
+[data-theme='netflix'] .glass-2090,
+[data-theme='netflix'] .quantum-crystal {
+  background: #181818 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Modern Specular Neon-Red & Silver Glass Rim Glow */
+.glass-border-glow,
+.plasma-border {
+  position: relative;
+}
+
+.glass-border-glow::before,
+.plasma-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    130deg,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(229, 9, 20, 0.65) 38%,
+    rgba(255, 77, 88, 0.55) 70%,
+    rgba(255, 255, 255, 0.35) 100%
+  );
+  background-size: 220% 220%;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.38;
+  transition: opacity 0.25s ease, background-position 0.55s ease;
+  pointer-events: none;
+  z-index: 25;
+}
+
+[data-theme='galaxy'] .glass-border-glow::before,
+[data-theme='galaxy'] .plasma-border::before {
+  background: linear-gradient(
+    130deg,
+    rgba(192, 132, 252, 0.75) 0%,
+    rgba(251, 191, 36, 0.65) 48%,
+    rgba(236, 72, 153, 0.6) 100%
+  );
+  opacity: 0.52;
+}
+
+[data-theme='2077'] .glass-border-glow::before,
+[data-theme='2077'] .plasma-border::before {
+  background: linear-gradient(
+    130deg,
+    rgba(6, 182, 212, 0.85) 0%,
+    rgba(244, 63, 94, 0.75) 55%,
+    rgba(34, 211, 238, 0.8) 100%
+  );
+  opacity: 0.55;
+}
+
+[data-theme='netflix'] .glass-border-glow::before,
+[data-theme='netflix'] .plasma-border::before {
+  display: none !important;
+}
+
+.glass-border-glow:hover::before,
+.glass-border-glow:focus-within::before,
+.plasma-border:hover::before,
+.plasma-border:focus-within::before {
+  opacity: 1;
+  animation: border-light-shift 2.2s linear infinite;
+}
+
+@keyframes border-light-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.hologram-scanline {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+@keyframes biometric-scan-beam {
+  0% {
+    top: 4%;
+    opacity: 0.25;
+  }
+  25% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    top: 94%;
+    opacity: 0.2;
+  }
+}
+
+.animate-biometric-scan {
+  animation: biometric-scan-beam 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 .tv-glow {
-  box-shadow: 0 0 35px -5px rgba(204, 0, 0, 0.35);
+  box-shadow:
+    0 0 36px -4px rgba(229, 9, 20, 0.45),
+    0 0 24px -8px rgba(255, 255, 255, 0.16);
 }
 
 .channel-card-focus {
@@ -41,9 +210,9 @@
 }
 .channel-card-focus:focus-visible,
 .channel-card-focus.active-focused {
-  outline: 2px solid #ff1a1a;
+  outline: 2px solid #e50914;
   outline-offset: 2px;
-  background-color: #1f1f1f;
+  background-color: rgba(24, 24, 34, 0.92);
   transform: translateX(-4px);
 }
 
@@ -68,27 +237,30 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-ticker-rtl {
+  .animate-ticker-rtl,
+  .glass-border-glow:hover::before,
+  .plasma-border:hover::before,
+  .animate-biometric-scan {
     animation: none;
   }
 }
 
-/* Netflix-style Cinematic Intro Animations */
+/* Modern 1.2s Red Neon 3D Glass Intro Keyframes */
 @keyframes netflix-a-reveal {
   0% {
     opacity: 0;
-    transform: scale(0.78);
-    filter: brightness(0.4) drop-shadow(0 0 0 rgba(229, 9, 20, 0));
+    transform: perspective(900px) rotateX(12deg) scale(0.84);
+    filter: brightness(0.75) drop-shadow(0 0 0 rgba(229, 9, 20, 0));
   }
-  45% {
+  55% {
     opacity: 1;
-    transform: scale(1);
-    filter: brightness(1.1) drop-shadow(0 0 40px rgba(229, 9, 20, 0.75));
+    transform: perspective(900px) rotateX(0deg) scale(1.02);
+    filter: brightness(1.12) drop-shadow(0 0 36px rgba(229, 9, 20, 0.65));
   }
   100% {
     opacity: 1;
-    transform: scale(1.04);
-    filter: brightness(1.25) drop-shadow(0 0 55px rgba(229, 9, 20, 0.9));
+    transform: perspective(900px) rotateX(0deg) scale(1.04);
+    filter: brightness(1.18) drop-shadow(0 0 42px rgba(229, 9, 20, 0.78));
   }
 }
 
@@ -97,58 +269,48 @@
     opacity: 1;
     transform: scale(1.04);
   }
-  65% {
-    opacity: 1;
-    transform: scale(6.5);
-  }
   100% {
     opacity: 0;
-    transform: scale(16);
-  }
-}
-
-@keyframes netflix-ribbon-burst {
-  0% {
-    opacity: 0;
-    transform: scaleY(0.15) scaleX(0.6);
-  }
-  30% {
-    opacity: 0.95;
-  }
-  100% {
-    opacity: 0;
-    transform: scaleY(2.2) scaleX(1.85);
+    transform: scale(1.65);
   }
 }
 
 .animate-netflix-a-reveal {
-  animation: netflix-a-reveal 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: netflix-a-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-netflix-zoom-exit {
-  animation: netflix-zoom-exit 0.8s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  animation: netflix-zoom-exit 0.32s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
-.animate-netflix-ribbon {
-  animation: netflix-ribbon-burst 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Top 10 hollowed numeral stroke */
+/* Top 10 Modern 3D Luminous Numerals */
 .top10-numeral {
   font-family: 'Outfit', 'Cairo', system-ui, sans-serif;
-  color: #141414;
-  -webkit-text-stroke: 3.5px #595959;
-  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.9);
-  transition: -webkit-text-stroke-color 0.3s ease, transform 0.3s ease;
+  filter: drop-shadow(0 0 18px rgba(229, 9, 20, 0.36)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.75));
+  transition: filter 0.3s ease, transform 0.3s ease;
 }
 
 .group\/top10:hover .top10-numeral {
-  -webkit-text-stroke-color: #e50914;
+  filter: drop-shadow(0 0 28px rgba(229, 9, 20, 0.68)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.25));
 }
 
-@media (max-width: 640px) {
-  .top10-numeral {
-    -webkit-text-stroke: 2.5px #595959;
-  }
+[data-theme='galaxy'] .top10-numeral {
+  filter: drop-shadow(0 0 20px rgba(192, 132, 252, 0.45)) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.8));
 }
 
+[data-theme='galaxy'] .group\/top10:hover .top10-numeral {
+  filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.7)) drop-shadow(0 0 14px rgba(192, 132, 252, 0.55));
+}
+
+[data-theme='2077'] .top10-numeral {
+  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.48)) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.85));
+}
+
+[data-theme='2077'] .group\/top10:hover .top10-numeral {
+  filter: drop-shadow(0 0 30px rgba(34, 211, 238, 0.75)) drop-shadow(0 0 14px rgba(244, 63, 94, 0.55));
+}
+
+[data-theme='netflix'] .top10-numeral,
+[data-theme='netflix'] .group\/top10:hover .top10-numeral {
+  filter: none !important;
+}

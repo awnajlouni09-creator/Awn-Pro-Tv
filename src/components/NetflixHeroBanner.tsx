@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Info, Star } from 'lucide-react';
 import { Channel } from '../types/iptv';
 import { extractYouTubeVideoId, getYouTubeThumbnails } from '../utils/mediaHelper';
+import { AppThemeId } from './ParticleNebulaBg';
 
 interface NetflixHeroBannerProps {
   featuredChannels: Channel[];
@@ -10,13 +11,13 @@ interface NetflixHeroBannerProps {
   onToggleFavorite: (channelId: string) => void;
   favorites: string[];
   customCovers?: Record<string, string>;
+  theme?: AppThemeId;
 }
 
 const sanitizeDescription = (raw?: string): string => {
   if (!raw) {
     return 'بث مباشر عالي الجودة متواصل على مدار 24 ساعة بأعلى دقة وبدون أي تقطيع.';
   }
-  // Hide technical file sizes / extensions like (.mp4, 1.2 GB, — file.mkv) from hero display
   if (/\.(mp4|mkv|webm|avi|m3u8)\b/i.test(raw) || /\b\d+(\.\d+)?\s?(MB|GB)\b/i.test(raw)) {
     return 'عرض سينمائي عالي الدقة جاهز للتشغيل الفوري بجودة فائقة.';
   }
@@ -29,7 +30,8 @@ export const NetflixHeroBanner: React.FC<NetflixHeroBannerProps> = ({
   onOpenDetails,
   onToggleFavorite,
   favorites,
-  customCovers = {}
+  customCovers = {},
+  theme = 'action'
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -45,6 +47,25 @@ export const NetflixHeroBanner: React.FC<NetflixHeroBannerProps> = ({
 
   const current = featuredChannels[currentIndex % featuredChannels.length];
   const isFav = favorites.includes(current.id);
+  const isClassic = theme === 'netflix';
+
+  const baseHex =
+    theme === 'galaxy'
+      ? '#04020f'
+      : theme === '2077'
+      ? '#050914'
+      : isClassic
+      ? '#141414'
+      : '#07070c';
+
+  const baseRgb =
+    theme === 'galaxy'
+      ? '4,2,15'
+      : theme === '2077'
+      ? '5,9,20'
+      : isClassic
+      ? '20,20,20'
+      : '7,7,12';
 
   const youtubeId =
     current.youtubeId ||
@@ -90,8 +111,11 @@ export const NetflixHeroBanner: React.FC<NetflixHeroBannerProps> = ({
   };
 
   return (
-    <section className="relative w-full h-[76vh] sm:h-[82vh] max-h-[880px] min-h-[500px] overflow-hidden select-none bg-[#141414]">
-      {/* Crystal-Clear Background Hero Artwork (No Blur, No Heavy Over-Darkening) */}
+    <section
+      className="relative w-full h-[76vh] sm:h-[82vh] max-h-[880px] min-h-[500px] overflow-hidden select-none"
+      style={{ backgroundColor: baseHex }}
+    >
+      {/* Crystal-Clear Background Hero Artwork */}
       <div className="absolute inset-0 z-0">
         <img
           key={current.id + (customCover || '')}
@@ -107,19 +131,16 @@ export const NetflixHeroBanner: React.FC<NetflixHeroBannerProps> = ({
           className="w-full h-full object-cover object-center animate-in fade-in duration-700"
         />
 
-        {/* Smooth Bottom Fade into #141414 + Light Right Vignette Behind RTL Typography Only */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              'linear-gradient(to top, #141414 0%, rgba(20,20,20,0.62) 22%, rgba(20,20,20,0) 58%)'
+            background: `linear-gradient(to top, ${baseHex} 0%, rgba(${baseRgb},0.74) 24%, rgba(${baseRgb},0) 60%)`
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              'linear-gradient(to left, rgba(20,20,20,0.82) 0%, rgba(20,20,20,0.38) 38%, rgba(20,20,20,0) 72%)'
+            background: `linear-gradient(to left, rgba(${baseRgb},0.85) 0%, rgba(${baseRgb},0.38) 38%, rgba(${baseRgb},0) 72%)`
           }}
         />
       </div>
@@ -127,17 +148,25 @@ export const NetflixHeroBanner: React.FC<NetflixHeroBannerProps> = ({
       {/* Hero Typography & Actions (RTL Right Aligned) */}
       <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 flex flex-col justify-end pb-16 sm:pb-24 md:pb-28">
         <div className="max-w-xl space-y-3 sm:space-y-4 text-right">
-          {/* Clean Category & Quality Line (No technical file extensions or clutter) */}
+          {/* Clean Category & Quality Line */}
           <div className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-zinc-200">
-            <span className="text-[#e50914] font-black tracking-wide">
-              {current.resolution || '4K'}
+            <span
+              className={`font-black tracking-wide font-['Outfit'] ${
+                theme === '2077'
+                  ? 'text-cyan-400'
+                  : theme === 'galaxy'
+                  ? 'text-amber-300'
+                  : 'text-[#E50914]'
+              }`}
+            >
+              {current.resolution || '4K ULTRA'}
             </span>
             <span aria-hidden="true" className="text-zinc-500">·</span>
             <span className="text-zinc-200">{current.group}</span>
           </div>
 
           {/* Bold Hero Title */}
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-[1.1] tracking-tight drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-[1.1] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
             {current.name}
           </h1>
 
@@ -146,11 +175,14 @@ export const NetflixHeroBanner: React.FC<NetflixHeroBannerProps> = ({
             {sanitizeDescription(current.description)}
           </p>
 
-          {/* Netflix Action Buttons: Solid White "تشغيل" + Translucent Gray "المزيد من المعلومات" */}
+          {/* Action Buttons */}
           <div className="pt-2 flex items-center gap-3 flex-wrap">
             <button
+              data-play-btn="true"
               onClick={() => onPlayChannel(current)}
-              className="flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 bg-white hover:bg-white/85 text-black text-xs sm:text-sm md:text-base font-black rounded-md shadow-xl transition-all cursor-pointer active:scale-95"
+              className={`flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 bg-white hover:bg-zinc-200 text-black text-xs sm:text-sm md:text-base font-black shadow-[0_12px_32px_rgba(0,0,0,0.65)] transition-all cursor-pointer active:scale-95 ${
+                isClassic ? 'rounded-md' : 'rounded-xl'
+              }`}
             >
               <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current ml-0.5" />
               <span>تشغيل</span>
@@ -158,18 +190,26 @@ export const NetflixHeroBanner: React.FC<NetflixHeroBannerProps> = ({
 
             <button
               onClick={() => onOpenDetails(current)}
-              className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 bg-[#6d6d6e]/75 hover:bg-[#6d6d6e]/55 text-white text-xs sm:text-sm md:text-base font-bold rounded-md transition-all cursor-pointer active:scale-95"
+              className={
+                isClassic
+                  ? 'flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 bg-[#6d6d6e]/70 hover:bg-[#6d6d6e]/50 text-white text-xs sm:text-sm md:text-base font-bold rounded-md transition-all cursor-pointer active:scale-95'
+                  : 'flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 modern-glass glass-border-glow text-white text-xs sm:text-sm md:text-base font-bold rounded-xl transition-all cursor-pointer active:scale-95'
+              }
             >
-              <Info className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Info className={`w-4 h-4 sm:w-5 sm:h-5 ${isClassic ? 'text-white' : 'text-[#E50914]'}`} />
               <span>المزيد من المعلومات</span>
             </button>
 
             <button
               onClick={() => onToggleFavorite(current.id)}
-              className={`p-2.5 sm:p-3 rounded-md border transition-all cursor-pointer active:scale-95 ${
+              className={`p-2.5 sm:p-3 border transition-all cursor-pointer active:scale-95 ${
+                isClassic ? 'rounded-md' : 'rounded-xl'
+              } ${
                 isFav
-                  ? 'bg-[#e50914]/25 border-[#e50914] text-[#ff4d4d]'
-                  : 'bg-black/35 border-white/25 text-white hover:bg-white/15'
+                  ? 'bg-[#e50914]/30 border-[#e50914] text-[#ff4d4d]'
+                  : isClassic
+                  ? 'bg-black/55 border-white/30 text-white hover:border-white'
+                  : 'modern-glass border-white/20 text-white hover:border-[#E50914]/65'
               }`}
               title={isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
               aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}

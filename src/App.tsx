@@ -56,6 +56,14 @@ import { GamesZone } from './components/GamesZone';
 import { NotificationToast } from './components/NotificationToast';
 import { BreakingNewsTicker } from './components/BreakingNewsTicker';
 import { OfflineIndicator } from './components/PWAInstallButton';
+import { ParticleNebulaBg, AppThemeId } from './components/ParticleNebulaBg';
+import { InteractiveCharacters } from './components/InteractiveCharacters';
+import {
+  isUiSoundsEnabled,
+  setUiSoundsEnabled,
+  playCyberClick,
+  playCyberWhoosh
+} from './utils/sciFiAudio';
 import {
   UpdatesModal,
   InstalledAppVersionInfo,
@@ -91,6 +99,8 @@ const TICKER_STORAGE_KEY = 'awn_tv_ticker_v1';
 const SUBSCRIPTION_CONFIG_STORAGE_KEY = 'awn_tv_sub_config_v1';
 const ACTIVE_SUBSCRIPTION_STORAGE_KEY = 'awn_tv_sub_status_v1';
 const APP_VERSION_STORAGE_KEY = 'awn_tv_installed_version_v1';
+const APP_THEME_STORAGE_KEY = 'awn_tv_app_theme_v1';
+const CHARACTERS_ENABLED_KEY = 'awn_tv_characters_enabled_v1';
 const getContinueWatchingKey = (profileId: string) => `awn_tv_continue_watching_v1_${profileId}`;
 
 const DEFAULT_INSTALLED_VERSION: InstalledAppVersionInfo = {
@@ -311,6 +321,55 @@ export default function App() {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isUpdatesModalOpen, setIsUpdatesModalOpen] = useState(false);
   const [isProfileManagementOpen, setIsProfileManagementOpen] = useState(false);
+  const [uiSoundsEnabled, setUiSoundsState] = useState<boolean>(() => isUiSoundsEnabled());
+  const [appTheme, setAppTheme] = useState<AppThemeId>(() => {
+    try {
+      const saved = localStorage.getItem(APP_THEME_STORAGE_KEY) as AppThemeId | null;
+      if (saved && ['action', 'galaxy', '2077', 'netflix'].includes(saved)) return saved;
+    } catch (e) {}
+    return 'action';
+  });
+
+  useEffect(() => {
+    try {
+      document.documentElement.setAttribute('data-theme', appTheme);
+      localStorage.setItem(APP_THEME_STORAGE_KEY, appTheme);
+    } catch (e) {}
+  }, [appTheme]);
+
+  const [charactersEnabled, setCharactersEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(CHARACTERS_ENABLED_KEY);
+      if (saved === 'false') return false;
+    } catch (e) {}
+    return true;
+  });
+
+  const handleToggleCharacters = useCallback(() => {
+    setCharactersEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(CHARACTERS_ENABLED_KEY, String(next));
+      } catch (e) {}
+      return next;
+    });
+  }, []);
+
+  const handleToggleUiSounds = useCallback(() => {
+    setUiSoundsState((prev) => {
+      const next = !prev;
+      setUiSoundsEnabled(next);
+      if (next) {
+        playCyberClick();
+      }
+      return next;
+    });
+  }, []);
+
+  const handleOpenDetailsModal = useCallback((channel: Channel) => {
+    playCyberWhoosh();
+    setDetailsChannel(channel);
+  }, []);
   const [installedVersion, setInstalledVersion] = useState<InstalledAppVersionInfo>(() => {
     try {
       const saved = localStorage.getItem(APP_VERSION_STORAGE_KEY);
@@ -963,9 +1022,36 @@ export default function App() {
       setTickerConfig(payload.tickerConfig);
     }
 
+    if (payload.theme) {
+      setAppTheme(payload.theme);
+      if (payload.theme === 'action') {
+        setCharactersEnabled(true);
+        setUiSoundsState(true);
+        setUiSoundsEnabled(true);
+        try {
+          localStorage.setItem(CHARACTERS_ENABLED_KEY, 'true');
+        } catch (e) {}
+      } else if (payload.theme === 'netflix') {
+        setCharactersEnabled(false);
+        setUiSoundsState(false);
+        setUiSoundsEnabled(false);
+        try {
+          localStorage.setItem(CHARACTERS_ENABLED_KEY, 'false');
+        } catch (e) {}
+      } else if (payload.theme === 'galaxy' || payload.theme === '2077') {
+        setCharactersEnabled(false);
+        setUiSoundsState(true);
+        setUiSoundsEnabled(true);
+        try {
+          localStorage.setItem(CHARACTERS_ENABLED_KEY, 'false');
+        } catch (e) {}
+      }
+    }
+
     const updatedVer: InstalledAppVersionInfo = {
       version: payload.version,
       versionName: payload.versionName,
+      theme: payload.theme,
       updatedAt: new Date().toISOString(),
       notes: payload.notes
     };
@@ -1483,7 +1569,7 @@ export default function App() {
 
   // 1. Cinematic Intro Screen
   if (showIntro) {
-    return <IntroAnimation onComplete={() => setShowIntro(false)} />;
+    return <IntroAnimation onComplete={() => setShowIntro(false)} theme={appTheme} />;
   }
 
   // 1b. Monthly Subscription ($2 PayPal) & Gift Code (911) Gate
@@ -1522,18 +1608,22 @@ export default function App() {
   // 2. Profile Selection Screen ("من يشاهد الآن؟")
   if (!activeProfile) {
     return (
-      <ProfileSelection
-        profiles={profiles}
-        onSelectProfile={handleSelectProfile}
-        onAddProfile={handleAddProfile}
-        onUpdateProfile={handleUpdateProfile}
-        onDeleteProfile={handleDeleteProfile}
-        onLockSubscriptionGate={handleLockSubscriptionGate}
-        getProfileHistory={getProfileHistory}
-        onRemoveHistoryItem={handleRemoveProfileHistoryItem}
-        onClearHistory={handleClearProfileHistory}
-        customCovers={effectiveCovers}
-      />
+      <>
+        <ProfileSelection
+          profiles={profiles}
+          onSelectProfile={handleSelectProfile}
+          onAddProfile={handleAddProfile}
+          onUpdateProfile={handleUpdateProfile}
+          onDeleteProfile={handleDeleteProfile}
+          onLockSubscriptionGate={handleLockSubscriptionGate}
+          getProfileHistory={getProfileHistory}
+          onRemoveHistoryItem={handleRemoveProfileHistoryItem}
+          onClearHistory={handleClearProfileHistory}
+          customCovers={effectiveCovers}
+          theme={appTheme}
+        />
+        <InteractiveCharacters enabled={charactersEnabled && appTheme !== 'netflix'} />
+      </>
     );
   }
 
@@ -1546,9 +1636,29 @@ export default function App() {
       ? visibleChannels[focusedChannelIndex].id
       : null;
 
-  // 3. Main Netflix-Style UI
+  // 3. Modern Luxury 3D Glassmorphism Cinema UI
   return (
-    <div className="min-h-screen w-full bg-[#141414] text-white select-none font-sans overflow-x-hidden">
+    <div
+      data-theme={appTheme}
+      className={`relative min-h-screen w-full text-white select-none font-sans overflow-x-hidden ${
+        appTheme === 'galaxy'
+          ? 'bg-[#04020f]'
+          : appTheme === '2077'
+          ? 'bg-[#050914]'
+          : appTheme === 'netflix'
+          ? 'bg-[#141414]'
+          : 'bg-[#07070c]'
+      }`}
+    >
+      {/* Ultra-Lightweight 60 FPS Theme Backdrop */}
+      <ParticleNebulaBg theme={appTheme} />
+
+      {/* Live 60 FPS Interactive SVG Characters (Spider-Man & Survivor vs Zombie) */}
+      <InteractiveCharacters
+        enabled={charactersEnabled && appTheme !== 'netflix'}
+        isHidden={isPlayerOpen && !isPlayerMinimized}
+      />
+
       {/* Offline Indicator & Floating Notification Toast */}
       <OfflineIndicator />
       <NotificationToast
@@ -1563,7 +1673,7 @@ export default function App() {
         }}
       />
 
-      {/* Netflix Top Navigation Bar */}
+      {/* Top Navigation Bar (Adapts to Active Theme) */}
       <NetflixNavbar
         activeTab={activeTab}
         onSelectTab={(tab) => {
@@ -1577,9 +1687,18 @@ export default function App() {
         onRequestSwitchProfile={handleRequestSwitchProfile}
         onLoadM3UFile={handleLoadM3UFile}
         onLoadLocalVideo={handleLoadLocalVideo}
-        onOpenRemoteModal={() => setIsRemoteModalOpen(true)}
-        onOpenPythonModal={() => setIsPythonModalOpen(true)}
-        onOpenAdminPanel={() => setIsAdminPinOpen(true)}
+        onOpenRemoteModal={() => {
+          if (appTheme !== 'netflix') playCyberWhoosh();
+          setIsRemoteModalOpen(true);
+        }}
+        onOpenPythonModal={() => {
+          if (appTheme !== 'netflix') playCyberWhoosh();
+          setIsPythonModalOpen(true);
+        }}
+        onOpenAdminPanel={() => {
+          if (appTheme !== 'netflix') playCyberWhoosh();
+          setIsAdminPinOpen(true);
+        }}
         favoritesCount={favorites.length}
         matchTheme={matchTheme}
         liveMatchesCount={matches.filter(m => m.status === 'live').length}
@@ -1600,13 +1719,24 @@ export default function App() {
         }}
         subscriptionStatusText={subscriptionStatusText}
         onLockSubscriptionGate={handleLockSubscriptionGate}
-        onOpenUpdatesModal={() => setIsUpdatesModalOpen(true)}
-        onOpenProfileManagement={() => setIsProfileManagementOpen(true)}
+        onOpenUpdatesModal={() => {
+          if (appTheme !== 'netflix') playCyberWhoosh();
+          setIsUpdatesModalOpen(true);
+        }}
+        onOpenProfileManagement={() => {
+          if (appTheme !== 'netflix') playCyberWhoosh();
+          setIsProfileManagementOpen(true);
+        }}
+        uiSoundsEnabled={uiSoundsEnabled}
+        onToggleUiSounds={handleToggleUiSounds}
+        charactersEnabled={charactersEnabled}
+        onToggleCharacters={handleToggleCharacters}
+        theme={appTheme}
       />
 
-      {/* Main Content Area (With extra bottom padding when Spotify Mini Player or Ticker is active) */}
+      {/* Main Content Area (Elevated above Particle Nebula Canvas) */}
       <main
-        className={
+        className={`relative z-10 ${
           isPlayerOpen && isPlayerMinimized
             ? tickerConfig.enabled
               ? 'pb-48 md:pb-40'
@@ -1614,7 +1744,7 @@ export default function App() {
             : tickerConfig.enabled
             ? 'pb-32 sm:pb-36'
             : 'pb-24 sm:pb-28'
-        }
+        }`}
       >
         {/* If user is actively searching: Show Search Results Grid */}
         {searchQuery.trim() ? (
@@ -1638,15 +1768,23 @@ export default function App() {
                   <div
                     key={item.id}
                     data-channel-id={item.id}
+                    data-channel-group={item.group}
+                    data-channel-name={item.name}
                     onClick={() =>
                       isMovieOrSeriesChannel(item)
                         ? setDetailsChannel(item)
                         : handlePlayChannel(item)
                     }
-                    className={`group relative aspect-video rounded-xl overflow-hidden bg-[#161616] border cursor-pointer transition-all hover:scale-105 shadow-lg ${
+                    className={`group relative aspect-video overflow-hidden cursor-pointer transition-all duration-300 ${
+                      appTheme === 'netflix'
+                        ? 'rounded-md bg-[#181818] border border-white/10 hover:scale-105 shadow-md'
+                        : 'rounded-xl modern-glass glass-border-glow hover:scale-105 hover:-translate-y-1 shadow-lg'
+                    } ${
                       focusedChannelId === item.id
-                        ? 'border-[#e50914] ring-2 ring-[#e50914] scale-105'
-                        : 'border-[#2b2b2b] hover:border-[#e50914]'
+                        ? 'ring-2 ring-[#E50914] scale-105 shadow-[0_0_28px_rgba(229,9,20,0.45)]'
+                        : appTheme === 'netflix'
+                        ? 'hover:shadow-xl'
+                        : 'hover:shadow-[0_18px_36px_rgba(0,0,0,0.9),0_0_24px_rgba(229,9,20,0.24)]'
                     }`}
                   >
                       <ChannelThumbnail
@@ -1684,10 +1822,11 @@ export default function App() {
             <NetflixHeroBanner
               featuredChannels={featuredChannels}
               onPlayChannel={handlePlayChannel}
-              onOpenDetails={setDetailsChannel}
+              onOpenDetails={handleOpenDetailsModal}
               onToggleFavorite={handleToggleFavorite}
               favorites={favorites}
               customCovers={effectiveCovers}
+              theme={appTheme}
             />
 
             {/* Netflix Content Rows Container */}
@@ -1700,6 +1839,7 @@ export default function App() {
                   onRemoveItem={handleRemoveContinueWatching}
                   customCovers={effectiveCovers}
                   focusedChannelId={focusedChannelId}
+                  theme={appTheme}
                 />
               )}
 
@@ -1711,11 +1851,12 @@ export default function App() {
                     title="أفضل 10 أفلام اليوم"
                     channels={top10MoviesChannels}
                     onPlayChannel={handlePlayChannel}
-                    onOpenDetails={setDetailsChannel}
+                    onOpenDetails={handleOpenDetailsModal}
                     onToggleFavorite={handleToggleFavorite}
                     favorites={favorites}
                     customCovers={effectiveCovers}
                     focusedChannelId={focusedChannelId}
+                    theme={appTheme}
                   />
                 )}
 
@@ -1728,11 +1869,12 @@ export default function App() {
                     subtitle="محتوى ترفيهي آمن وممتع"
                     channels={kidsChannels}
                     onPlayChannel={handlePlayChannel}
-                    onOpenDetails={setDetailsChannel}
+                    onOpenDetails={handleOpenDetailsModal}
                     onToggleFavorite={handleToggleFavorite}
                     favorites={favorites}
                     customCovers={effectiveCovers}
                     focusedChannelId={focusedChannelId}
+                    theme={appTheme}
                   />
                   {favoriteChannels.length > 0 && (
                     <NetflixRow
@@ -1740,16 +1882,17 @@ export default function App() {
                       icon={<Star className="w-5 h-5 text-amber-400" />}
                       channels={favoriteChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
                 </>
               ) : (
-                /* Adult / Full Netflix Experience */
+                /* Adult / Full Experience */
                 <>
                   {/* Tab: Favorites */}
                   {activeTab === 'favorites' && (
@@ -1759,11 +1902,12 @@ export default function App() {
                       subtitle="القنوات والمسلسلات التي أضفتها"
                       channels={favoriteChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1775,11 +1919,12 @@ export default function App() {
                       subtitle="تغطيات إخبارية حية متواصلة 24/7"
                       channels={newsChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1790,11 +1935,12 @@ export default function App() {
                       subtitle="قناة MBC 1 المباشرة ومواسم شباب البومب الأكثر مشاهدة"
                       channels={seriesChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1805,11 +1951,12 @@ export default function App() {
                       subtitle="أقوى ملخصات الأنمي والقتالات والحكايات الكاملة"
                       channels={animeChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1820,7 +1967,7 @@ export default function App() {
                       subtitle="استمع للأغاني أثناء التصفح بتجربة سبوتيفاي متواصلة"
                       channels={musicChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
@@ -1829,6 +1976,7 @@ export default function App() {
                       activeChannelId={isPlayerOpen ? playingChannel?.id : null}
                       isPlayerPlaying={isPlayerPlaying}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1839,11 +1987,12 @@ export default function App() {
                       subtitle="أغرب القصص الواقعية والتحقيقات والاعترافات المشوقة"
                       channels={storiesChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1854,11 +2003,12 @@ export default function App() {
                       subtitle="أقوى أفلام الأكشن والخيال العلمي 4K"
                       channels={moviesChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1869,11 +2019,12 @@ export default function App() {
                       subtitle="كرتون نتورك، وقت المغامرة، سبونج بوب، غامبول، ومستر بين"
                       channels={kidsChannels}
                       onPlayChannel={handlePlayChannel}
-                      onOpenDetails={setDetailsChannel}
+                      onOpenDetails={handleOpenDetailsModal}
                       onToggleFavorite={handleToggleFavorite}
                       favorites={favorites}
                       customCovers={effectiveCovers}
                       focusedChannelId={focusedChannelId}
+                      theme={appTheme}
                     />
                   )}
 
@@ -1976,7 +2127,7 @@ export default function App() {
                               subtitle={builtIn.subtitle}
                               channels={builtIn.channels}
                               onPlayChannel={handlePlayChannel}
-                              onOpenDetails={setDetailsChannel}
+                              onOpenDetails={handleOpenDetailsModal}
                               onToggleFavorite={handleToggleFavorite}
                               favorites={favorites}
                               customCovers={effectiveCovers}
@@ -1985,6 +2136,7 @@ export default function App() {
                               activeChannelId={isPlayerOpen ? playingChannel?.id : null}
                               isPlayerPlaying={isPlayerPlaying}
                               focusedChannelId={focusedChannelId}
+                              theme={appTheme}
                             />
                           );
                         }
@@ -2001,6 +2153,7 @@ export default function App() {
                             favorites={favorites}
                             customCovers={effectiveCovers}
                             focusedChannelId={focusedChannelId}
+                            theme={appTheme}
                           />
                         );
                       }
@@ -2019,6 +2172,7 @@ export default function App() {
                           favorites={favorites}
                           customCovers={effectiveCovers}
                           focusedChannelId={focusedChannelId}
+                          theme={appTheme}
                         />
                       );
                     })}
@@ -2247,11 +2401,12 @@ export default function App() {
         onClose={() => setIsPythonModalOpen(false)}
       />
 
-      {/* 11. App Updates Modal (Install New Version via .json) */}
+      {/* 11. App Updates Modal (Theme Downloads & Install via .json) */}
       <UpdatesModal
         isOpen={isUpdatesModalOpen}
         onClose={() => setIsUpdatesModalOpen(false)}
         currentVersion={installedVersion}
+        activeTheme={appTheme}
         onApplyUpdate={handleApplyUpdatePackage}
       />
 
