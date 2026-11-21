@@ -887,7 +887,8 @@ export default function App() {
 
   const handleImportBackup = (payload: AdminBackupPayload) => {
     setAllChannels(payload.channels);
-    setCategories(payload.categories);
+   if (!hasValidSubscription) {
+
     setCustomCovers(payload.customCovers);
     try {
       localStorage.setItem(CUSTOM_COVERS_KEY, JSON.stringify(payload.customCovers));
@@ -1486,10 +1487,9 @@ export default function App() {
     return <IntroAnimation onComplete={() => setShowIntro(false)} />;
   }
 
-  // 1b. Monthly Subscription ($2 PayPal) & Gift Code (911) Gate
-  if (!hasValidSubscription) {
-    return (
-      <>
+ if (false) {
+  return (
+    <>
         <SubscriptionGate
           config={subscriptionConfig}
           expiredNotice={isSubscriptionExpired}
