@@ -112,7 +112,8 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
   if (!isOpen) return null;
 
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = e.target.files;
+    const file = files && files.length > 0 ? files.item(0) : null;
     e.target.value = '';
     if (!file) return;
 
@@ -270,4 +271,3 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
               </span>
             </div>
             <p className="text-base font-bold text-white">{currentVersion.versionName}</p>
-            {formattedUpdatedAt && (
