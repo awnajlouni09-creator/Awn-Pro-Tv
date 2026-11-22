@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Channel } from './types/iptv';
+import { Channel, TitleReview } from './types/iptv';
 import { UserProfile } from './types/profile';
 import { MatchItem, MatchThemeId } from './types/matches';
 import { ContinueWatchingItem } from './types/history';
@@ -33,6 +33,7 @@ import {
   requestBrowserNotificationPermission,
   triggerBrowserNotification
 } from './utils/notificationSound';
+import { writeAllVisitorReviews } from './utils/titleReviewsStorage';
 import { NetflixNavbar, NavTab } from './components/NetflixNavbar';
 import { NetflixHeroBanner } from './components/NetflixHeroBanner';
 import { NetflixRow } from './components/NetflixRow';
@@ -384,7 +385,17 @@ export default function App() {
                   fileSizeBytes: rec.size,
                   description:
                     rec.channelMeta?.description ||
-                    `فيلم محلي محفوظ (${formatFileSize(rec.size)}) — ${rec.fileName}`
+                    `فيلم محلي محفوظ (${formatFileSize(rec.size)}) — ${rec.fileName}`,
+                  backdrop: rec.channelMeta?.backdrop,
+                  primaryColor: rec.channelMeta?.primaryColor,
+                  secondaryColor: rec.channelMeta?.secondaryColor,
+                  year: rec.channelMeta?.year,
+                  durationLabel: rec.channelMeta?.durationLabel,
+                  maturityRating: rec.channelMeta?.maturityRating,
+                  genres: rec.channelMeta?.genres,
+                  imdbRating: rec.channelMeta?.imdbRating,
+                  castMembers: rec.channelMeta?.castMembers,
+                  reviews: rec.channelMeta?.reviews
                 });
               }
             }
@@ -618,7 +629,17 @@ export default function App() {
           fileSizeBytes: media.size,
           description:
             media.channelMeta?.description ||
-            `فيلم محلي محفوظ (${formatFileSize(media.size)}) — ${media.fileName}`
+            `فيلم محلي محفوظ (${formatFileSize(media.size)}) — ${media.fileName}`,
+          backdrop: media.channelMeta?.backdrop,
+          primaryColor: media.channelMeta?.primaryColor,
+          secondaryColor: media.channelMeta?.secondaryColor,
+          year: media.channelMeta?.year,
+          durationLabel: media.channelMeta?.durationLabel,
+          maturityRating: media.channelMeta?.maturityRating,
+          genres: media.channelMeta?.genres,
+          imdbRating: media.channelMeta?.imdbRating,
+          castMembers: media.channelMeta?.castMembers,
+          reviews: media.channelMeta?.reviews
         });
       }
     });
@@ -646,6 +667,7 @@ export default function App() {
     posterFile?: File | null;
     posterUrl?: string;
     description?: string;
+    extraFields?: Partial<Channel>;
   }): Promise<Channel> => {
     const id = `ch-local-${Date.now()}`;
     const safeMime = params.videoFile.type || 'video/mp4';
@@ -654,14 +676,26 @@ export default function App() {
       ? params.posterFile.slice(0, params.posterFile.size, params.posterFile.type || 'image/jpeg')
       : null;
 
+    const extra = params.extraFields || {};
     const channelMeta = {
       name: params.name.trim(),
       group: params.group,
       badge: params.badge?.trim() || 'ملف محلي',
       resolution: params.resolution,
       description:
-        params.description?.trim() ||
-        'عرض سينمائي عالي الدقة محفوظ في مكتبتك الخاصة مع دعم التقديم والتأخير والاستئناف التلقائي.'
+        params.description !== undefined
+          ? params.description.trim()
+          : 'عرض سينمائي عالي الدقة محفوظ في مكتبتك الخاصة مع دعم التقديم والتأخير والاستئناف التلقائي.',
+      backdrop: extra.backdrop,
+      primaryColor: extra.primaryColor,
+      secondaryColor: extra.secondaryColor,
+      year: extra.year,
+      durationLabel: extra.durationLabel,
+      maturityRating: extra.maturityRating,
+      genres: extra.genres,
+      imdbRating: extra.imdbRating,
+      castMembers: extra.castMembers,
+      reviews: extra.reviews
     };
 
     await saveLocalMedia({
@@ -693,6 +727,7 @@ export default function App() {
     }));
 
     const newChannel: Channel = {
+      ...extra,
       id,
       name: channelMeta.name,
       url: '', // Hydrated dynamically from IndexedDB
@@ -754,7 +789,17 @@ export default function App() {
         resolution: updated.resolution,
         description: localUpdates?.newVideoFile
           ? `فيلم محلي محفوظ (${formatFileSize(localUpdates.newVideoFile.size)}) — ${localUpdates.newVideoFile.name}`
-          : updated.description
+          : updated.description,
+        backdrop: updated.backdrop,
+        primaryColor: updated.primaryColor,
+        secondaryColor: updated.secondaryColor,
+        year: updated.year,
+        durationLabel: updated.durationLabel,
+        maturityRating: updated.maturityRating,
+        genres: updated.genres,
+        imdbRating: updated.imdbRating,
+        castMembers: updated.castMembers,
+        reviews: updated.reviews
       };
 
       const savedRec = await updateLocalMediaRecord(mediaId, {
@@ -824,6 +869,15 @@ export default function App() {
       setPlayingChannel(media ? { ...finalChannel, url: media.videoUrl } : finalChannel);
     }
   };
+
+  const handleUpdateChannelReviews = useCallback((channelId: string, nextReviews: TitleReview[]) => {
+    setAllChannels((prev) =>
+      prev.map((ch) => (ch.id === channelId ? { ...ch, reviews: nextReviews } : ch))
+    );
+    setDetailsChannel((prev) =>
+      prev && prev.id === channelId ? { ...prev, reviews: nextReviews } : prev
+    );
+  }, []);
 
   const handleAdminDeleteChannel = async (channelId: string) => {
     const target = allChannels.find((ch) => ch.id === channelId);
@@ -903,6 +957,9 @@ export default function App() {
     if (payload.adminPin) {
       setAdminPin(payload.adminPin);
     }
+    if (payload.titleReviews) {
+      writeAllVisitorReviews(payload.titleReviews);
+    }
   };
 
   const handleApplyUpdatePackage = (payload: UpdatePackagePayload) => {
@@ -962,6 +1019,10 @@ export default function App() {
 
     if (payload.tickerConfig) {
       setTickerConfig(payload.tickerConfig);
+    }
+
+    if (payload.titleReviews) {
+      writeAllVisitorReviews(payload.titleReviews);
     }
 
     const updatedVer: InstalledAppVersionInfo = {
@@ -2086,18 +2147,21 @@ export default function App() {
 
       {/* 6. Title Details Modal (Netflix Synopsis & Info & Manual Cover Change) */}
       {(() => {
-        const detailsContinueItem = detailsChannel
-          ? resolvedContinueWatching.find((cw) => cw.channelId === detailsChannel.id)
+        const activeDetailsChannel = detailsChannel
+          ? visibleChannels.find((ch) => ch.id === detailsChannel.id) || detailsChannel
+          : null;
+        const detailsContinueItem = activeDetailsChannel
+          ? resolvedContinueWatching.find((cw) => cw.channelId === activeDetailsChannel.id)
           : undefined;
         return (
           <TitleDetailsModal
-            channel={detailsChannel}
-            isOpen={!!detailsChannel}
+            channel={activeDetailsChannel}
+            isOpen={!!activeDetailsChannel}
             onClose={() => setDetailsChannel(null)}
             onPlay={handlePlayChannel}
             onToggleFavorite={handleToggleFavorite}
-            isFavorite={detailsChannel ? favorites.includes(detailsChannel.id) : false}
-            customCover={detailsChannel ? effectiveCovers[detailsChannel.id] : null}
+            isFavorite={activeDetailsChannel ? favorites.includes(activeDetailsChannel.id) : false}
+            customCover={activeDetailsChannel ? effectiveCovers[activeDetailsChannel.id] : null}
             onUpdateCover={handleUpdateCover}
             allChannels={visibleChannels}
             favorites={favorites}
@@ -2107,6 +2171,9 @@ export default function App() {
             onSelectChannel={setDetailsChannel}
             isMuted={playerMuted}
             onToggleMute={() => setPlayerMuted((m) => !m)}
+            activeProfileName={activeProfile.name}
+            activeProfileAvatar={activeProfile.avatar}
+            onUpdateChannelReviews={handleUpdateChannelReviews}
           />
         );
       })()}

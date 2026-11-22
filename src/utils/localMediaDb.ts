@@ -1,3 +1,5 @@
+import { CastMember, TitleReview } from '../types/iptv';
+
 /**
  * IndexedDB storage utility for saving local uploaded movies, posters,
  * and channel metadata persistently in Awn Tv pro without exhausting localStorage quotas.
@@ -13,6 +15,16 @@ export interface LocalMediaChannelMeta {
   badge?: string;
   resolution?: '4K' | 'FHD' | 'HD' | 'SD';
   description?: string;
+  backdrop?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  year?: string;
+  durationLabel?: string;
+  maturityRating?: 'kids' | '7+' | '13+' | '16+' | '18+' | 'عائلي';
+  genres?: string[];
+  imdbRating?: string;
+  castMembers?: CastMember[];
+  reviews?: TitleReview[];
 }
 
 export interface StoredLocalMedia {

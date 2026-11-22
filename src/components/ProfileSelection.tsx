@@ -202,17 +202,6 @@ export const ProfileSelection: React.FC<ProfileSelectionProps> = ({
         >
           Awn Tv pro
         </span>
-
-        {onLockSubscriptionGate && (
-          <button
-            type="button"
-            onClick={onLockSubscriptionGate}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/25 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
-          >
-            <Lock className="w-3.5 h-3.5 text-[#E50914]" />
-            <span>بوابة الاشتراك</span>
-          </button>
-        )}
       </div>
 
       {/* Main Content Box */}

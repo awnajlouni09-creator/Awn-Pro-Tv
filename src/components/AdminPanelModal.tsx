@@ -39,7 +39,7 @@ import {
   ChevronsUp,
   GripVertical
 } from 'lucide-react';
-import { Channel } from '../types/iptv';
+import { Channel, TitleReview } from '../types/iptv';
 import { MatchItem, MatchStatus, TournamentId } from '../types/matches';
 import { AppNotification, BreakingTickerConfig, NotificationType } from '../types/notifications';
 import { SubscriptionConfig, ActiveSubscription } from '../types/subscription';
@@ -52,6 +52,18 @@ import {
   getYouTubeThumbnails
 } from '../utils/mediaHelper';
 import { formatFileSize } from '../utils/localMediaDb';
+import {
+  AdminTitleDetailsFields,
+  TitleDetailsDraft,
+  createEmptyTitleDetailsDraft,
+  createDraftFromChannel,
+  applyDraftToChannelFields
+} from './AdminTitleDetailsFields';
+import {
+  readAllVisitorReviews,
+  getVisitorReviewsForChannel,
+  deleteVisitorReviewForChannel
+} from '../utils/titleReviewsStorage';
 
 type AdminTab = 'add' | 'manage' | 'matches' | 'notifications' | 'categories' | 'subscription' | 'backup';
 
@@ -65,6 +77,7 @@ export interface AdminBackupPayload {
   matches?: MatchItem[];
   tickerConfig?: BreakingTickerConfig;
   adminPin?: string;
+  titleReviews?: Record<string, TitleReview[]>;
 }
 
 interface AdminPanelModalProps {
@@ -88,6 +101,7 @@ interface AdminPanelModalProps {
     posterFile?: File | null;
     posterUrl?: string;
     description?: string;
+    extraFields?: Partial<Channel>;
   }) => Promise<Channel>;
   onPlayChannel?: (channel: Channel) => void;
   onUpdateChannel: (
@@ -182,6 +196,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [newBadge, setNewBadge] = useState('');
   const [newResolution, setNewResolution] = useState<'4K' | 'FHD' | 'HD' | 'SD'>('FHD');
   const [newDescription, setNewDescription] = useState('');
+  const [addDetailsDraft, setAddDetailsDraft] = useState<TitleDetailsDraft>(createEmptyTitleDetailsDraft);
   const [localVideoFile, setLocalVideoFile] = useState<File | null>(null);
   const [localPosterFile, setLocalPosterFile] = useState<File | null>(null);
   const [localPosterPreview, setLocalPosterPreview] = useState<string | null>(null);
@@ -202,6 +217,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [editBadge, setEditBadge] = useState('');
   const [editResolution, setEditResolution] = useState<'4K' | 'FHD' | 'HD' | 'SD'>('FHD');
   const [editDescription, setEditDescription] = useState('');
+  const [editDetailsDraft, setEditDetailsDraft] = useState<TitleDetailsDraft>(createEmptyTitleDetailsDraft);
+  const [editVisitorReviews, setEditVisitorReviews] = useState<TitleReview[]>([]);
   const [editLocalVideoFile, setEditLocalVideoFile] = useState<File | null>(null);
   const [editLocalPosterFile, setEditLocalPosterFile] = useState<File | null>(null);
   const [editLocalPosterPreview, setEditLocalPosterPreview] = useState<string | null>(null);
@@ -380,7 +397,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           videoFile: localVideoFile,
           posterFile: localPosterFile,
           posterUrl: newCoverUrl.trim() || undefined,
-          description: newDescription.trim() || undefined
+          description: newDescription.trim() || undefined,
+          extraFields: applyDraftToChannelFields(addDetailsDraft)
         });
 
         if (localPosterPreview?.startsWith('blob:')) {
@@ -392,6 +410,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         setNewCoverUrl('');
         setNewBadge('');
         setNewDescription('');
+        setAddDetailsDraft(createEmptyTitleDetailsDraft());
         setLocalVideoFile(null);
         setLocalPosterFile(null);
         setLocalPosterPreview(null);
@@ -414,7 +433,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     if (!newName.trim() || !newUrl.trim()) return;
 
     const id = `ch-admin-${Date.now()}`;
-    const channel = buildChannelFromInputs(
+    const baseChannel = buildChannelFromInputs(
       id,
       newName,
       newUrl,
@@ -424,6 +443,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       undefined,
       newDescription
     );
+    const channel: Channel = {
+      ...baseChannel,
+      ...applyDraftToChannelFields(addDetailsDraft)
+    };
 
     onAddChannel(channel, newCoverUrl.trim() || undefined);
     setNewName('');
@@ -431,6 +454,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setNewCoverUrl('');
     setNewBadge('');
     setNewDescription('');
+    setAddDetailsDraft(createEmptyTitleDetailsDraft());
     showToast(`تمت إضافة "${channel.name}" إلى باقة "${CATEGORY_LABELS[channel.group] || channel.group}" بنجاح`);
   };
 
@@ -448,6 +472,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setEditBadge(ch.badge || '');
     setEditResolution(ch.resolution || 'FHD');
     setEditDescription(ch.description || '');
+    setEditDetailsDraft(createDraftFromChannel(ch));
+    setEditVisitorReviews(getVisitorReviewsForChannel(ch.id));
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -463,7 +489,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           group: editGroup,
           badge: editBadge.trim() || undefined,
           resolution: editResolution,
-          description: editDescription.trim() || undefined
+          description: editDescription.trim() || undefined,
+          ...applyDraftToChannelFields(editDetailsDraft)
         };
 
         // Determine cover update precedence: uploaded file vs URL vs cleared
@@ -504,7 +531,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
     if (!editUrl.trim()) return;
 
-    const updated = buildChannelFromInputs(
+    const baseUpdated = buildChannelFromInputs(
       editingChannel.id,
       editName,
       editUrl,
@@ -514,6 +541,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       editingChannel,
       editDescription
     );
+    const updated: Channel = {
+      ...baseUpdated,
+      ...applyDraftToChannelFields(editDetailsDraft)
+    };
 
     await onUpdateChannel(updated, editCoverUrl.trim() || null);
     setEditingChannel(null);
@@ -598,8 +629,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   };
 
   const handleExportJson = () => {
+    const titleReviews = readAllVisitorReviews();
     const payload: AdminBackupPayload = {
-      version: 3,
+      version: 4,
       exportedAt: new Date().toISOString(),
       channels,
       categories,
@@ -607,7 +639,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       heroChannelIds,
       matches,
       tickerConfig,
-      adminPin
+      adminPin,
+      titleReviews
     };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -644,7 +677,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           heroChannelIds: Array.isArray(parsed.heroChannelIds) ? parsed.heroChannelIds : [],
           matches: Array.isArray(parsed.matches) ? parsed.matches : undefined,
           tickerConfig: parsed.tickerConfig && typeof parsed.tickerConfig === 'object' ? parsed.tickerConfig : undefined,
-          adminPin: typeof parsed.adminPin === 'string' && /^\d{4}$/.test(parsed.adminPin) ? parsed.adminPin : undefined
+          adminPin: typeof parsed.adminPin === 'string' && /^\d{4}$/.test(parsed.adminPin) ? parsed.adminPin : undefined,
+          titleReviews:
+            parsed.titleReviews && typeof parsed.titleReviews === 'object' && !Array.isArray(parsed.titleReviews)
+              ? (parsed.titleReviews as Record<string, TitleReview[]>)
+              : undefined
         });
         showToast(`تم استيراد ${parsed.channels.length} قناة والإعدادات بنجاح!`);
       } catch {
@@ -1078,6 +1115,12 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                       className="w-full bg-[#1e1e1e] text-white text-xs p-3 rounded-xl border border-[#333333] focus:border-[#e50914] focus:outline-none resize-none leading-relaxed"
                     />
                   </div>
+
+                  {/* Two-Tone Colors, Backdrop, Metadata, Cast & Reviews */}
+                  <AdminTitleDetailsFields
+                    draft={addDetailsDraft}
+                    onChange={setAddDetailsDraft}
+                  />
 
                   {/* Live Cover Preview */}
                   {addPreviewImg && (
@@ -2331,8 +2374,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
       {/* EDIT CHANNEL OVERLAY MODAL */}
       {editingChannel && (
-        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#161616] border border-[#303030] w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-2xl relative text-white animate-in fade-in zoom-in-95 my-auto">
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-[#161616] border border-[#303030] w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl p-5 sm:p-6 shadow-2xl relative text-white animate-in fade-in zoom-in-95 my-auto">
             <button
               onClick={() => setEditingChannel(null)}
               className="absolute top-4 left-4 p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 cursor-pointer"
@@ -2537,6 +2580,18 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   className="w-full bg-[#1e1e1e] text-white text-xs p-3 rounded-xl border border-[#333333] focus:border-[#e50914] focus:outline-none resize-none leading-relaxed"
                 />
               </div>
+
+              {/* Two-Tone Colors, Backdrop, Metadata, Cast & Reviews */}
+              <AdminTitleDetailsFields
+                draft={editDetailsDraft}
+                onChange={setEditDetailsDraft}
+                visitorReviews={editVisitorReviews}
+                onDeleteVisitorReview={(reviewId) => {
+                  const next = deleteVisitorReviewForChannel(editingChannel.id, reviewId);
+                  setEditVisitorReviews(next);
+                  showToast('تم حذف تقييم الزائر');
+                }}
+              />
 
               <div className="pt-2 flex items-center justify-end gap-2.5">
                 <button

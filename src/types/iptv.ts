@@ -15,6 +15,33 @@ export interface ChannelEpisode {
   description?: string;
 }
 
+export interface CastMember {
+  id: string;
+  name: string;
+  character?: string;
+  imageUrl?: string;
+}
+
+export interface TitleReviewReply {
+  id: string;
+  authorName: string;
+  date: string;
+  text: string;
+}
+
+export interface TitleReview {
+  id: string;
+  authorName: string;
+  authorAvatar?: string;
+  date: string;
+  rating: number; // 1 to 5
+  comment: string;
+  likesCount: number;
+  repliesCount?: number;
+  replies?: TitleReviewReply[];
+  source?: 'admin' | 'visitor';
+}
+
 export interface Channel {
   id: string;
   name: string;
@@ -33,7 +60,13 @@ export interface Channel {
   durationLabel?: string;
   year?: string;
   maturityRating?: 'kids' | '7+' | '13+' | '16+' | '18+' | 'عائلي';
+  genres?: string[];
+  imdbRating?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
   cast?: string[];
+  castMembers?: CastMember[];
+  reviews?: TitleReview[];
   director?: string;
   collectionName?: string;
   isRecentlyAdded?: boolean;

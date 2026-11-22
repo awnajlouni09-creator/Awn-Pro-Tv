@@ -31,6 +31,7 @@ export interface UpdatePackagePayload {
   heroChannelIds?: string[];
   matches?: MatchItem[];
   tickerConfig?: BreakingTickerConfig;
+  titleReviews?: Record<string, Channel['reviews'] extends (infer R)[] | undefined ? R[] : never>;
 }
 
 interface UpdatesModalProps {
@@ -79,7 +80,28 @@ const normalizeChannelItem = (raw: unknown, fallbackGroup: string, index: number
     description: typeof obj.description === 'string' ? obj.description : undefined,
     youtubeId: typeof obj.youtubeId === 'string' ? obj.youtubeId : undefined,
     embedUrl: typeof obj.embedUrl === 'string' ? obj.embedUrl : undefined,
-    servers: Array.isArray(obj.servers) ? (obj.servers as Channel['servers']) : undefined
+    servers: Array.isArray(obj.servers) ? (obj.servers as Channel['servers']) : undefined,
+    year: typeof obj.year === 'string' ? obj.year : undefined,
+    durationLabel: typeof obj.durationLabel === 'string' ? obj.durationLabel : undefined,
+    maturityRating:
+      obj.maturityRating === 'kids' ||
+      obj.maturityRating === '7+' ||
+      obj.maturityRating === '13+' ||
+      obj.maturityRating === '16+' ||
+      obj.maturityRating === '18+' ||
+      obj.maturityRating === 'عائلي'
+        ? obj.maturityRating
+        : undefined,
+    genres: Array.isArray(obj.genres) ? (obj.genres.filter((g): g is string => typeof g === 'string')) : undefined,
+    imdbRating: typeof obj.imdbRating === 'string' ? obj.imdbRating : undefined,
+    primaryColor: typeof obj.primaryColor === 'string' ? obj.primaryColor : undefined,
+    secondaryColor: typeof obj.secondaryColor === 'string' ? obj.secondaryColor : undefined,
+    cast: Array.isArray(obj.cast) ? (obj.cast.filter((c): c is string => typeof c === 'string')) : undefined,
+    castMembers: Array.isArray(obj.castMembers) ? (obj.castMembers as Channel['castMembers']) : undefined,
+    reviews: Array.isArray(obj.reviews) ? (obj.reviews as Channel['reviews']) : undefined,
+    director: typeof obj.director === 'string' ? obj.director : undefined,
+    collectionName: typeof obj.collectionName === 'string' ? obj.collectionName : undefined,
+    episodes: Array.isArray(obj.episodes) ? (obj.episodes as Channel['episodes']) : undefined
   };
 };
 
@@ -204,6 +226,10 @@ export const UpdatesModal: React.FC<UpdatesModalProps> = ({
           tickerConfig:
             parsed.tickerConfig && typeof parsed.tickerConfig === 'object'
               ? (parsed.tickerConfig as BreakingTickerConfig)
+              : undefined,
+          titleReviews:
+            parsed.titleReviews && typeof parsed.titleReviews === 'object' && !Array.isArray(parsed.titleReviews)
+              ? (parsed.titleReviews as UpdatePackagePayload['titleReviews'])
               : undefined
         };
 
