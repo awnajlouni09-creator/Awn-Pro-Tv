@@ -9,10 +9,10 @@ export interface ActiveSubscription {
   isActive: boolean;
   method: 'paypal' | 'gift_code' | 'admin';
   activatedAt: number;
-  expiresAt: number | null; // null = free/permanent (e.g. gift code 911 or admin)
-  giftCodeUsed?: string;
-  paypalReference?: string;
+  expiresAt: number | null;
   payerEmail?: string;
+  paypalReference?: string;
+  giftCodeUsed?: string;
 }
 
 export const DEFAULT_SUBSCRIPTION_CONFIG: SubscriptionConfig = {

@@ -1254,7 +1254,8 @@ export const TitleDetailsModal: React.FC<TitleDetailsModalProps> = ({
                       onPlay({
                         ...channel,
                         name: `${channel.name} - ${ep.title}`,
-                        url: ep.url
+                        url: ep.url,
+                        description: ep.description || channel.description
                       });
                     }}
                     className="w-full p-3.5 flex items-center gap-4 hover:bg-white/5 text-right transition-colors cursor-pointer"

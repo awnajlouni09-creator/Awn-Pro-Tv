@@ -2,7 +2,7 @@ export type TournamentId = 'ucl' | 'laliga' | 'epl' | 'saudi';
 
 export type MatchThemeId = 'default' | TournamentId;
 
-export type MatchStatus = 'upcoming' | 'live';
+export type MatchStatus = 'live' | 'upcoming';
 
 export interface MatchItem {
   id: string;
@@ -16,15 +16,13 @@ export interface MatchItem {
   kickoffTimestamp?: number;
 }
 
-export interface TournamentThemeConfig {
+export interface TournamentTheme {
   id: MatchThemeId;
   name: string;
   shortName: string;
   tagline: string;
   bgHex: string;
-  accentHex: string;
   secondaryHex: string;
+  accentHex: string;
   buttonTextHex: string;
-  cardBgClass: string;
-  borderClass: string;
 }

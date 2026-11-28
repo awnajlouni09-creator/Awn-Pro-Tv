@@ -124,6 +124,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
   const [selectedAudioTrack, setSelectedAudioTrack] = useState<string>('ar');
   const [hoverThumbnailUrl, setHoverThumbnailUrl] = useState<string | null>(null);
   const [sleepRemainingSeconds, setSleepRemainingSeconds] = useState<number | null>(null);
+  const [showPauseScreen, setShowPauseScreen] = useState(false);
   const lastPreviewCaptureRef = useRef<number>(0);
 
   const volume = externalVolume !== undefined ? externalVolume : internalVolume;
@@ -140,6 +141,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
   };
 
   const controlsTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pauseIdleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLoopingRef = useRef(isLooping);
   const onNextRef = useRef(onNextChannel);
   const lastProgressReportRef = useRef<number>(0);
@@ -147,6 +149,11 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
   const currentTimeRef = useRef(0);
   const durationRef = useRef(0);
   const isSeekingRef = useRef(false);
+  const isPlayingRef = useRef(isPlaying);
+  const canShowPauseScreenRef = useRef(false);
+  const showPauseScreenRef = useRef(showPauseScreen);
+  const pauseScreenJustDismissedAtRef = useRef(0);
+  const didMountRemoteWatchRef = useRef(false);
 
   useEffect(() => {
     currentTimeRef.current = currentTime;
@@ -171,6 +178,14 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
   useEffect(() => {
     onPlayingStateChange?.(isPlaying);
   }, [isPlaying, onPlayingStateChange]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  useEffect(() => {
+    showPauseScreenRef.current = showPauseScreen;
+  }, [showPauseScreen]);
 
   // Detect orientation
   useEffect(() => {
@@ -221,6 +236,12 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
     : null;
   const isYouTube = activeType === 'youtube' || !!youtubeEmbedUrl;
   const isWebHub = channel?.type === 'netflix' || channel?.type === 'web';
+  const canShowPauseScreen =
+    isOpen && !isMinimized && !isWebHub && !isPlaying && !isLoading && !errorMessage;
+
+  useEffect(() => {
+    canShowPauseScreenRef.current = canShowPauseScreen;
+  }, [canShowPauseScreen]);
 
   // Helper to send command to YouTube iframe via JS API postMessage
   const sendYouTubeCommand = useCallback((func: string, args: unknown[] = []) => {
@@ -351,17 +372,89 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
     };
   }, [isOpen, channel, isYouTube, sendYouTubeCommand, onProgressUpdate]);
 
-  // Auto-hide controls after 3 seconds of mouse/touch inactivity
-  const triggerControls = useCallback(() => {
-    setShowControls(true);
-    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
-    controlsTimerRef.current = setTimeout(() => {
+  const schedulePauseScreenTimer = useCallback(() => {
+    if (pauseIdleTimerRef.current) {
+      clearTimeout(pauseIdleTimerRef.current);
+      pauseIdleTimerRef.current = null;
+    }
+    if (!canShowPauseScreenRef.current) return;
+    pauseIdleTimerRef.current = setTimeout(() => {
+      if (!canShowPauseScreenRef.current) return;
+      setShowPauseScreen(true);
       setShowControls(false);
       setShowSettingsMenu(false);
       setShowTimerMenu(false);
       setShowSubtitlesMenu(false);
-    }, 3000);
+      setShowEpisodesDrawer(false);
+    }, 10000);
   }, []);
+
+  // Auto-hide controls after 3s during playback, and trigger Netflix Pause Screen after 10s of pause inactivity
+  const triggerControls = useCallback(() => {
+    if (showPauseScreenRef.current) {
+      pauseScreenJustDismissedAtRef.current = Date.now();
+      setShowPauseScreen(false);
+    }
+    setShowControls(true);
+    if (controlsTimerRef.current) {
+      clearTimeout(controlsTimerRef.current);
+      controlsTimerRef.current = null;
+    }
+    if (isPlayingRef.current) {
+      controlsTimerRef.current = setTimeout(() => {
+        setShowControls(false);
+        setShowSettingsMenu(false);
+        setShowTimerMenu(false);
+        setShowSubtitlesMenu(false);
+      }, 3000);
+    }
+    schedulePauseScreenTimer();
+  }, [schedulePauseScreenTimer]);
+
+  // Manage pause idle countdown & smooth return to controls on state transitions
+  useEffect(() => {
+    if (canShowPauseScreen) {
+      setShowPauseScreen(false);
+      setShowControls(true);
+      if (controlsTimerRef.current) {
+        clearTimeout(controlsTimerRef.current);
+        controlsTimerRef.current = null;
+      }
+      schedulePauseScreenTimer();
+    } else {
+      if (pauseIdleTimerRef.current) {
+        clearTimeout(pauseIdleTimerRef.current);
+        pauseIdleTimerRef.current = null;
+      }
+      setShowPauseScreen(false);
+      if (isPlaying && isOpen && !isMinimized) {
+        if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        controlsTimerRef.current = setTimeout(() => {
+          setShowControls(false);
+          setShowSettingsMenu(false);
+          setShowTimerMenu(false);
+          setShowSubtitlesMenu(false);
+        }, 3000);
+      }
+    }
+    return () => {
+      if (pauseIdleTimerRef.current) {
+        clearTimeout(pauseIdleTimerRef.current);
+        pauseIdleTimerRef.current = null;
+      }
+    };
+  }, [canShowPauseScreen, isPlaying, isOpen, isMinimized, schedulePauseScreenTimer]);
+
+  // Dismiss pause screen & reset idle timer on remote / volume / fullscreen interactions
+  useEffect(() => {
+    if (!didMountRemoteWatchRef.current) {
+      didMountRemoteWatchRef.current = true;
+      return;
+    }
+    if (isOpen && !isMinimized && !isWebHub) {
+      triggerControls();
+    }
+  }, [volume, isMuted, externalFullscreenSignal, isOpen, isMinimized, isWebHub, triggerControls]);
 
   // Fullscreen listener & ESC handler
   useEffect(() => {
@@ -698,16 +791,18 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Keyboard shortcuts when Cinema Player is active in full screen
+  // Keyboard & remote key activity listener (any key wakes pause screen & restores controls)
   useEffect(() => {
     if (!isOpen || isMinimized || isWebHub) return;
     const handlePlayerKeys = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      triggerControls();
+
       if (e.code === 'Space' || e.key === 'k' || e.key === 'K') {
         e.preventDefault();
         handleTogglePlayPause();
-        triggerControls();
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         handleSkipSeconds(10);
@@ -724,13 +819,56 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
     };
     window.addEventListener('keydown', handlePlayerKeys);
     return () => window.removeEventListener('keydown', handlePlayerKeys);
-  }, [isOpen, isMinimized, isWebHub, handleTogglePlayPause, handleSkipSeconds, toggleFullscreen]);
+  }, [isOpen, isMinimized, isWebHub, handleTogglePlayPause, handleSkipSeconds, toggleFullscreen, triggerControls]);
 
   if (!isOpen || !channel) return null;
 
   const effectiveTime = isSeeking && seekPreviewTime !== null ? seekPreviewTime : currentTime;
   const progressPercent = duration > 0 ? Math.min(100, (effectiveTime / duration) * 100) : 0;
   const isMusicTrack = channel.group === 'أغاني وموسيقى';
+
+  // Netflix Pause Screen metadata & synopsis extraction (Year, Season, Episode, Movie/Episode Description)
+  const liveMetaSource = allChannels.find((c) => c.id === channel.id);
+  const pauseMetaParts: string[] = [];
+  const effectiveYear = channel.year?.trim() || liveMetaSource?.year?.trim() || '';
+  if (effectiveYear) {
+    pauseMetaParts.push(effectiveYear);
+  }
+  const matchedEpisode =
+    channel.episodes?.find(
+      (ep) => ep.url === activeUrl || channel.name.endsWith(`- ${ep.title}`)
+    ) ||
+    liveMetaSource?.episodes?.find(
+      (ep) => ep.url === activeUrl || channel.name.endsWith(`- ${ep.title}`)
+    );
+  const seasonMatch = channel.name.match(
+    /(الموسم\s+(?:ال)?[\u0600-\u06FF\d]+|الجزء\s+[\u0600-\u06FF\d]+|Season\s+\d+|S\d+)/i
+  );
+  if (seasonMatch?.[1]) {
+    pauseMetaParts.push(seasonMatch[1].trim());
+  }
+  if (matchedEpisode) {
+    pauseMetaParts.push(
+      matchedEpisode.title
+        ? `الحلقة ${matchedEpisode.number}: ${matchedEpisode.title}`
+        : `الحلقة ${matchedEpisode.number}`
+    );
+  } else {
+    const epMatch = channel.name.match(/(الحلقة\s+\d+|Episode\s+\d+|E\d+)/i);
+    if (epMatch?.[1]) {
+      pauseMetaParts.push(epMatch[1].trim());
+    }
+  }
+  const pauseMetadataLine = Array.from(new Set(pauseMetaParts)).join(' · ');
+  const rawDescription =
+    matchedEpisode?.description?.trim() ||
+    channel.description?.trim() ||
+    liveMetaSource?.description?.trim() ||
+    '';
+  const pauseSynopsis =
+    rawDescription.length > 0 && !/\.(mp4|mkv|webm|avi|m3u8)$/i.test(rawDescription)
+      ? rawDescription
+      : '';
 
   const handleBackAction = () => {
     if (document.fullscreenElement) {
@@ -750,8 +888,10 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
       <div
         ref={containerRef}
         onMouseMove={!isMinimized ? triggerControls : undefined}
+        onMouseDown={!isMinimized ? triggerControls : undefined}
         onClick={!isMinimized ? triggerControls : undefined}
         onTouchStart={!isMinimized ? triggerControls : undefined}
+        onWheel={!isMinimized ? triggerControls : undefined}
         className={
           isMinimized
             ? 'fixed bottom-0 left-0 w-[240px] h-[135px] opacity-0 pointer-events-none -z-10 overflow-hidden'
@@ -761,10 +901,10 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
         {/* Top Cinema Header (Clean Netflix Back Arrow & Optional Actions) */}
         {!isMinimized && (
           <div
-            className={`absolute top-0 left-0 right-0 z-30 h-20 px-4 sm:px-8 flex items-center justify-between gap-4 bg-gradient-to-b from-black/85 via-black/35 to-transparent transition-opacity duration-300 ${
-              showControls || showSettingsMenu || showTimerMenu
-                ? 'opacity-100'
-                : 'opacity-0 pointer-events-none'
+            className={`absolute top-0 left-0 right-0 z-30 h-20 px-4 sm:px-8 flex items-center justify-between gap-4 bg-gradient-to-b from-black/85 via-black/35 to-transparent transition-opacity ${
+              !showPauseScreen && (showControls || showSettingsMenu || showTimerMenu)
+                ? 'opacity-100 duration-200'
+                : 'opacity-0 duration-500 pointer-events-none'
             }`}
           >
             {/* Right (RTL start): Netflix Back Arrow & Listening Mode */}
@@ -869,7 +1009,16 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
                 playsInline
                 className={`${getObjectFitStyle()} transition-all`}
                 onDoubleClick={toggleFullscreen}
-                onClick={handleTogglePlayPause}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onClick={(e) => {
+                  if (Date.now() - pauseScreenJustDismissedAtRef.current < 350) {
+                    e.stopPropagation();
+                    triggerControls();
+                    return;
+                  }
+                  handleTogglePlayPause(e);
+                }}
               />
               {/* Hidden Preview Extractor Video & Canvas for Hover Scrubber Thumbnail */}
               {!isMinimized && activeUrl && !activeUrl.includes('.m3u8') && (
@@ -907,7 +1056,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
           )}
 
           {/* Subtle Subtitle Status / Caption Indicator when Subtitles Active */}
-          {!isMinimized && !isWebHub && selectedSubtitleLang !== 'none' && showControls && (
+          {!isMinimized && !isWebHub && selectedSubtitleLang !== 'none' && showControls && !showPauseScreen && (
             <div
               className={`absolute bottom-28 left-1/2 -translate-x-1/2 z-20 px-3 py-1 rounded bg-black/70 text-white/95 pointer-events-none transition-all ${
                 defaultSubtitleSize === 'large'
@@ -926,7 +1075,7 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
           )}
 
           {/* Rotate to Landscape Prompt on Mobile Portrait */}
-          {!isMinimized && isPortrait && showControls && (
+          {!isMinimized && isPortrait && showControls && !showPauseScreen && (
             <button
               onClick={toggleFullscreen}
               className="absolute bottom-24 z-20 flex items-center gap-2 px-3.5 py-1.5 bg-black/75 backdrop-blur-md border border-white/20 rounded-full text-zinc-200 text-xs font-semibold sm:hidden shadow-lg animate-pulse"
@@ -977,6 +1126,58 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
               </button>
             </div>
           )}
+
+          {/* Netflix Cinematic Idle Pause Screen (Shown after 10s of inactivity while paused) */}
+          {!isMinimized && !isWebHub && (
+            <div
+              dir="rtl"
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerControls();
+              }}
+              aria-hidden={!showPauseScreen}
+              className={`absolute inset-0 z-[25] flex items-center justify-start px-6 sm:px-14 md:px-20 lg:px-28 transition-opacity ${
+                showPauseScreen
+                  ? 'opacity-100 duration-700 pointer-events-auto cursor-default'
+                  : 'opacity-0 duration-150 pointer-events-none'
+              }`}
+              style={{
+                background:
+                  'linear-gradient(to left, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.66) 48%, rgba(0, 0, 0, 0.4) 100%)'
+              }}
+            >
+              {/* Soft vertical ambient vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/45 pointer-events-none" />
+
+              {/* Right-Center Info Stack (RTL) */}
+              <div className="relative z-10 max-w-2xl text-right space-y-2.5 sm:space-y-3.5 select-none">
+                <p className="text-xs sm:text-sm md:text-base font-medium text-zinc-300/90 tracking-wide">
+                  أنت تشاهد
+                </p>
+
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white leading-[1.15] drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
+                  {channel.name}
+                </h2>
+
+                {pauseMetadataLine && (
+                  <p className="text-sm sm:text-lg md:text-xl font-semibold text-white/95 tracking-tight">
+                    {pauseMetadataLine}
+                  </p>
+                )}
+
+                {pauseSynopsis && (
+                  <p className="text-sm sm:text-base md:text-lg font-normal text-white/95 leading-relaxed max-w-xl text-right line-clamp-4 pt-1 drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                    {pauseSynopsis}
+                  </p>
+                )}
+              </div>
+
+              {/* Bottom-Left Paused Indicator */}
+              <span className="absolute bottom-6 sm:bottom-10 left-6 sm:left-12 md:left-16 z-10 text-xs sm:text-sm md:text-base font-medium text-zinc-300/85 tracking-wide">
+                متوقف مؤقتاً
+              </span>
+            </div>
+          )}
         </div>
 
         {/* 3. Netflix Fullscreen Bottom Control Bar */}
@@ -984,14 +1185,15 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
           <div
             onClick={(e) => e.stopPropagation()}
             onMouseMove={triggerControls}
-            className={`absolute bottom-0 left-0 right-0 z-30 pt-16 pb-4 sm:pb-6 px-4 sm:px-8 md:px-12 flex flex-col gap-3 bg-gradient-to-t from-black/95 via-black/75 to-transparent transition-opacity duration-300 safe-area-pb ${
-              showControls ||
-              showSettingsMenu ||
-              showTimerMenu ||
-              showSubtitlesMenu ||
-              showEpisodesDrawer
-                ? 'opacity-100'
-                : 'opacity-0 pointer-events-none'
+            className={`absolute bottom-0 left-0 right-0 z-30 pt-16 pb-4 sm:pb-6 px-4 sm:px-8 md:px-12 flex flex-col gap-3 bg-gradient-to-t from-black/95 via-black/75 to-transparent transition-opacity safe-area-pb ${
+              !showPauseScreen &&
+              (showControls ||
+                showSettingsMenu ||
+                showTimerMenu ||
+                showSubtitlesMenu ||
+                showEpisodesDrawer)
+                ? 'opacity-100 duration-200'
+                : 'opacity-0 duration-500 pointer-events-none'
             }`}
           >
             {/* Row 1: Netflix Red Timeline Scrubber (#E50914) + Hover Thumbnail Preview + Remaining Time */}
@@ -1274,10 +1476,12 @@ export const CinemaPlayerModal: React.FC<CinemaPlayerModalProps> = ({
                                   key={ep.id}
                                   type="button"
                                   onClick={() => {
+                                    const baseTitle = liveMetaSource?.name || channel.name;
                                     onSelectChannel?.({
                                       ...channel,
-                                      name: `${channel.name} - ${ep.title}`,
-                                      url: ep.url
+                                      name: `${baseTitle} - ${ep.title}`,
+                                      url: ep.url,
+                                      description: ep.description || liveMetaSource?.description || channel.description
                                     });
                                     setShowEpisodesDrawer(false);
                                   }}

@@ -1246,7 +1246,15 @@ export default function App() {
   // Play handler (Music plays directly in Spotify Mini Player so user can keep browsing)
   const handlePlayChannel = useCallback(
     (channel: Channel, resumeTime?: number) => {
-      const liveChannel = resolvedAllChannels.find((c) => c.id === channel.id) || channel;
+      const storedChannel = resolvedAllChannels.find((c) => c.id === channel.id);
+      const liveChannel: Channel = storedChannel
+        ? {
+            ...storedChannel,
+            ...channel,
+            url: storedChannel.isLocalSaved && storedChannel.url ? storedChannel.url : (channel.url || storedChannel.url),
+            description: channel.description || storedChannel.description
+          }
+        : channel;
       const isMusic = liveChannel.group === 'أغاني وموسيقى';
       setInitialSeekTime(resumeTime);
       setPlayingChannel(liveChannel);
